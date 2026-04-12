@@ -1,12 +1,13 @@
 'use server';
 
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { getDb, saveDb } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 
 export async function getCurrentUser() {
-  const session = await getServerSession() as any;
+  const session = await getServerSession(authOptions) as any;
   if (!session || !session.user || !session.user.email) return null;
   
   const db = await getDb();
