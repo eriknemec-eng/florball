@@ -11,6 +11,7 @@ export interface User {
   hasPaid: boolean;
   debt?: number;
   position?: 'player' | 'goalie' | 'versatile';
+  emailNotifications?: boolean;
   passwordHash?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: number;

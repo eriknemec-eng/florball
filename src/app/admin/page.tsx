@@ -1,7 +1,7 @@
 import { getCurrentUser } from '../actions/auth';
 import { getDb } from '@/lib/db';
 import { redirect } from 'next/navigation';
-import { AdminUsersTable, AdminNewsForm, AdminMatchesTable, AdminNewsTable, AdminTabs, AdminTemplatesBox, AdminCustomMatchForm, AdminNewTemplateForm, AdminSettingsForm, AdminFinanceBox } from '@/components/AdminClient';
+import { AdminUsersTable, AdminNewsForm, AdminMatchesTable, AdminNewsTable, AdminTabs, AdminTemplatesBox, AdminCustomMatchForm, AdminNewTemplateForm, AdminSettingsForm, AdminFinanceBox, AdminEmails } from '@/components/AdminClient';
 import { ShieldAlert } from 'lucide-react';
 
 export default async function AdminPage() {
@@ -41,7 +41,7 @@ export default async function AdminPage() {
               <div className="flex items-end justify-between">
                 <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Historie a Plánované zápasy</h3>
               </div>
-              <AdminMatchesTable matches={db.matches} whatsappLink={db.settings?.whatsappLink} />
+              <AdminMatchesTable matches={db.matches} users={db.users} whatsappLink={db.settings?.whatsappLink} />
             </section>
           </div>
         }
@@ -73,6 +73,12 @@ export default async function AdminPage() {
           <section className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Finance & Dlužníci</h3>
             <AdminFinanceBox users={db.users} />
+          </section>
+        }
+        emailsSection={
+          <section className="space-y-4">
+             <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Odesílač</h3>
+             <AdminEmails currentUser={user} />
           </section>
         }
       />

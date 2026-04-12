@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from 'next/link';
-import { Home, Settings, LogOut, QrCode } from 'lucide-react';
+import { Home, Settings, LogOut, QrCode, UserRound } from 'lucide-react';
 import { getCurrentUser, logout } from "./actions/auth";
 import { ProfileSetup } from "@/components/ProfileSetup";
 
@@ -51,7 +51,9 @@ export default async function RootLayout({
                 </nav>
 
                 <div className="flex items-center gap-3 text-sm text-zinc-400 border-l border-zinc-700 pl-4">
-                  <span className="hidden sm:inline">{user.name}</span>
+                  <Link href="/profile" className="hidden sm:inline hover:text-emerald-400 transition-colors cursor-pointer" title="Nastavení profilu">
+                    {user.name}
+                  </Link>
                   <form action={logout}>
                     <button type="submit" className="p-2 hover:bg-zinc-800 rounded-full transition-colors">
                       <LogOut size={16} />
@@ -78,6 +80,10 @@ export default async function RootLayout({
               <Link href="/dashboard" className="flex flex-col items-center gap-1 text-zinc-400 hover:text-emerald-400 transition-colors">
                 <Home size={24} />
                 <span className="text-[10px] font-medium uppercase tracking-wider">Domů</span>
+              </Link>
+              <Link href="/profile" className="flex flex-col items-center gap-1 text-zinc-400 hover:text-emerald-400 transition-colors">
+                <UserRound size={24} />
+                <span className="text-[10px] font-medium uppercase tracking-wider">Profil</span>
               </Link>
               {user.role === 'admin' && (
                 <Link href="/admin" className="flex flex-col items-center gap-1 text-zinc-400 hover:text-cyan-400 transition-colors">

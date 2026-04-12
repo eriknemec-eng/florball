@@ -2,8 +2,8 @@
 
 import { useTransition, useState } from 'react';
 import { User, Match, News, MatchTemplate } from '@/lib/db';
-import { cancelMatch, deleteMatch, toggleUserStatus, changeUserPosition, addNews, deleteNews, toggleNewsPin, deleteMatchTemplate, addMatchTemplate, updateSettings, toggleUserRole, resetSubscribers, resolveDebt, evaluateMatchAttendance, createMatchFromTemplate, createCustomMatch } from '@/app/actions/admin';
-import { Ban, Check, X, Shield, Star, DollarSign, Send, Trash2, Pin, Calendar, CalendarPlus, ChevronLeft, ChevronRight, LayoutList, Users, MessageSquare, Plus, Settings, Banknote, Share2 } from 'lucide-react';
+import { editMatch, cancelMatch, deleteUser, deleteMatch, toggleUserStatus, changeUserPosition, addNews, deleteNews, toggleNewsPin, deleteMatchTemplate, addMatchTemplate, updateSettings, toggleUserRole, resetSubscribers, resolveDebt, evaluateMatchAttendance, createMatchFromTemplate, createCustomMatch, sendMatchInvitationEmail } from '@/app/actions/admin';
+import { Pencil, Ban, Check, X, Shield, Star, DollarSign, Send, Trash2, Pin, Calendar, CalendarPlus, ChevronLeft, ChevronRight, LayoutList, Users, MessageSquare, Plus, Settings, Banknote, Share2, ArrowLeft, Mail, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function AdminTabs({
@@ -11,88 +11,107 @@ export function AdminTabs({
   usersSection,
   newsSection,
   settingsSection,
-  financeSection
+  financeSection,
+  emailsSection
 }: {
   matchesSection: React.ReactNode;
   usersSection: React.ReactNode;
   newsSection: React.ReactNode;
   settingsSection?: React.ReactNode;
   financeSection?: React.ReactNode;
+  emailsSection?: React.ReactNode;
 }) {
-  const [activeTab, setActiveTab] = useState<'matches' | 'users' | 'news' | 'settings' | 'finance'>('matches');
+  const [activeTab, setActiveTab] = useState<'matches' | 'users' | 'news' | 'settings' | 'finance' | 'emails' | null>(null);
+
+  if (activeTab) {
+    return (
+      <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+        <button 
+          onClick={() => setActiveTab(null)}
+          className="flex items-center gap-2 px-4 py-2 border border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 text-zinc-300 hover:text-white rounded-xl transition-all shadow-sm font-semibold mb-2"
+        >
+          <ArrowLeft size={18} /> Zpět do rozcestníku
+        </button>
+        
+        <div>
+          {activeTab === 'matches' && <div key="matches">{matchesSection}</div>}
+          {activeTab === 'users' && <div key="users">{usersSection}</div>}
+          {activeTab === 'finance' && <div key="finance">{financeSection}</div>}
+          {activeTab === 'news' && <div key="news">{newsSection}</div>}
+          {activeTab === 'settings' && <div key="settings">{settingsSection}</div>}
+          {activeTab === 'emails' && <div key="emails">{emailsSection}</div>}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-zinc-800">
-        <button
-          onClick={() => setActiveTab('matches')}
-          className={cn(
-            "flex items-center gap-2 px-4 py-3 font-semibold transition-all whitespace-nowrap border-b-2",
-            activeTab === 'matches' 
-              ? "text-emerald-500 border-emerald-500" 
-              : "text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-700"
-          )}
-        >
-          <LayoutList size={18} />
-          Správa Zápasů
-        </button>
-        <button
-          onClick={() => setActiveTab('users')}
-          className={cn(
-            "flex items-center gap-2 px-4 py-3 font-semibold transition-all whitespace-nowrap border-b-2",
-            activeTab === 'users' 
-              ? "text-blue-500 border-blue-500" 
-              : "text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-700"
-          )}
-        >
-          <Users size={18} />
-          Hráči a Platby
-        </button>
-        <button
-          onClick={() => setActiveTab('finance')}
-          className={cn(
-            "flex items-center gap-2 px-4 py-3 font-semibold transition-all whitespace-nowrap border-b-2",
-            activeTab === 'finance' 
-              ? "text-red-500 border-red-500" 
-              : "text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-700"
-          )}
-        >
-          <Banknote size={18} />
-          Finance & Dlužníci
-        </button>
-        <button
-          onClick={() => setActiveTab('news')}
-          className={cn(
-            "flex items-center gap-2 px-4 py-3 font-semibold transition-all whitespace-nowrap border-b-2",
-            activeTab === 'news' 
-              ? "text-amber-500 border-amber-500" 
-              : "text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-700"
-          )}
-        >
-          <MessageSquare size={18} />
-          Nástěnka & Aktuality
-        </button>
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={cn(
-            "flex items-center gap-2 px-4 py-3 font-semibold transition-all whitespace-nowrap border-b-2",
-            activeTab === 'settings' 
-              ? "text-purple-500 border-purple-500" 
-              : "text-zinc-500 border-transparent hover:text-zinc-300 hover:border-zinc-700"
-          )}
-        >
-          <Settings size={18} />
-          Nastavení
-        </button>
-      </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto animate-in fade-in scale-95 duration-500">
+      <button
+        onClick={() => setActiveTab('matches')}
+        className="flex flex-col items-center justify-center p-5 bg-zinc-900 border border-zinc-800 rounded-3xl hover:bg-zinc-800 hover:border-emerald-500/50 transition-all group shadow-sm text-center"
+      >
+        <div className="p-3 bg-emerald-500/10 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+          <LayoutList size={28} className="text-emerald-500" />
+        </div>
+        <h3 className="text-base font-bold text-white mb-1">Správa Zápasů</h3>
+        <p className="text-zinc-500 text-xs">Vytváření šablon a zápasů.</p>
+      </button>
 
-      <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-        {activeTab === 'matches' && matchesSection}
-        {activeTab === 'users' && usersSection}
-        {activeTab === 'finance' && financeSection}
-        {activeTab === 'news' && newsSection}
-        {activeTab === 'settings' && settingsSection}
-      </div>
+      <button
+        onClick={() => setActiveTab('users')}
+        className="flex flex-col items-center justify-center p-5 bg-zinc-900 border border-zinc-800 rounded-3xl hover:bg-zinc-800 hover:border-blue-500/50 transition-all group shadow-sm text-center"
+      >
+        <div className="p-3 bg-blue-500/10 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+          <Users size={28} className="text-blue-500" />
+        </div>
+        <h3 className="text-base font-bold text-white mb-1">Hráči a Nastavení</h3>
+        <p className="text-zinc-500 text-xs">Tresty a smazání hráčů.</p>
+      </button>
+
+      <button
+        onClick={() => setActiveTab('finance')}
+        className="flex flex-col items-center justify-center p-5 bg-zinc-900 border border-zinc-800 rounded-3xl hover:bg-zinc-800 hover:border-amber-500/50 transition-all group shadow-sm text-center"
+      >
+        <div className="p-3 bg-amber-500/10 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+          <Banknote size={28} className="text-amber-500" />
+        </div>
+        <h3 className="text-base font-bold text-white mb-1">Finance & Dlužníci</h3>
+        <p className="text-zinc-500 text-xs">Řešení dluhů z neúčastí.</p>
+      </button>
+
+      <button
+        onClick={() => setActiveTab('news')}
+        className="flex flex-col items-center justify-center p-5 bg-zinc-900 border border-zinc-800 rounded-3xl hover:bg-zinc-800 hover:border-purple-500/50 transition-all group shadow-sm text-center"
+      >
+        <div className="p-3 bg-purple-500/10 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+          <MessageSquare size={28} className="text-purple-500" />
+        </div>
+        <h3 className="text-base font-bold text-white mb-1">Nástěnka a Zprávy</h3>
+        <p className="text-zinc-500 text-xs">Připínání trvalých oznámení.</p>
+      </button>
+
+      <button
+        onClick={() => setActiveTab('settings')}
+        className="flex flex-col items-center justify-center p-5 bg-zinc-900 border border-zinc-800 rounded-3xl hover:bg-zinc-800 hover:border-zinc-500/50 transition-all group shadow-sm text-center"
+      >
+        <div className="p-3 bg-zinc-800 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+          <Settings size={28} className="text-zinc-400" />
+        </div>
+        <h3 className="text-base font-bold text-white mb-1">Globální Nastavení</h3>
+        <p className="text-zinc-500 text-xs">Změna WhatsApp a cen.</p>
+      </button>
+
+      <button
+        onClick={() => setActiveTab('emails')}
+        className="flex flex-col items-center justify-center p-5 bg-zinc-900 border border-zinc-800 rounded-3xl hover:bg-zinc-800 hover:border-rose-500/50 transition-all group shadow-sm text-center"
+      >
+        <div className="p-3 bg-rose-500/10 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+          <Send size={28} className="text-rose-500" />
+        </div>
+        <h3 className="text-base font-bold text-white mb-1">E-mail Server</h3>
+        <p className="text-zinc-500 text-xs">Testování odesílání přes Brevo.</p>
+      </button>
     </div>
   );
 }
@@ -102,7 +121,7 @@ export function AdminUsersTable({ users, currentUser }: { users: User[], current
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  const isMainAdmin = currentUser?.email === 'admin@florbal.cz';
+  const isMainAdmin = currentUser?.email === 'admin@florbal.cz' || currentUser?.email === 'erik.nemec@me.com';
   const totalPages = Math.ceil(users.length / itemsPerPage);
   const currentUsers = users.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -123,6 +142,7 @@ export function AdminUsersTable({ users, currentUser }: { users: User[], current
               <th className="px-4 py-3 font-medium text-center">Předplatitel</th>
               <th className="px-4 py-3 font-medium text-center">Platba</th>
               {isMainAdmin && <th className="px-4 py-3 font-medium text-center">Práva Admina</th>}
+              <th className="px-4 py-3 font-medium text-center">Akce</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
@@ -193,6 +213,20 @@ export function AdminUsersTable({ users, currentUser }: { users: User[], current
                     </button>
                   </td>
                 )}
+                <td className="px-4 py-3 text-center">
+                  <button
+                    disabled={isPending || user.uid === 'admin1' || (currentUser?.email === 'admin@florbal.cz' ? false : currentUser?.uid === user.uid)}
+                    onClick={() => {
+                       if (confirm(`Opravdu chcete nenávratně smazat účet ${user.name} (${user.email})?`)) {
+                          startTransition(() => deleteUser(user.uid));
+                       }
+                    }}
+                    className="p-1.5 rounded-lg border bg-zinc-800 border-zinc-700 text-zinc-500 hover:border-red-500/50 hover:text-red-500 hover:bg-red-500/10 transition-all inline-flex disabled:opacity-30 disabled:cursor-not-allowed"
+                    title="Smazat účet hráče"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -399,11 +433,12 @@ export function AdminSettingsForm({ defaultSettings }: { defaultSettings: any })
   );
 }
 
-export function AdminMatchesTable({ matches, whatsappLink }: { matches: Match[], whatsappLink?: string }) {
+export function AdminMatchesTable({ matches, users, whatsappLink }: { matches: Match[], users: User[], whatsappLink?: string }) {
   const [isPending, startTransition] = useTransition();
   const [currentPage, setCurrentPage] = useState(1);
   const [evaluatingMatch, setEvaluatingMatch] = useState<Match | null>(null);
-  const [shareMatch, setShareMatch] = useState<{title: string, date: string} | null>(null);
+  const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+  const [shareMatch, setShareMatch] = useState<{id: string, title: string, date: string} | null>(null);
   const [shareMatchCustom, setShareMatchCustom] = useState<{title: string, textBody: string} | null>(null);
   const itemsPerPage = 6;
 
@@ -452,7 +487,7 @@ export function AdminMatchesTable({ matches, whatsappLink }: { matches: Match[],
                       <div className="font-semibold text-zinc-200">
                         {match.title ? <span className="text-emerald-500">{match.title}</span> : 'Utkání'} • {new Date(match.date).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
                       </div>
-                      <div className="text-xs text-zinc-500">Kapacita: {match.capacity} | Přihlášeno: {match.responses.filter(r => r.status === 'going').length}</div>
+                      <div className="text-xs text-zinc-500">Kapacita: {match.capacity} | Přihlášeno: {match.responses.filter(r => ['going_player', 'going_goalie', 'playing_player', 'playing_goalie'].includes(r.status)).length}</div>
                     </div>
                   </div>
                 </td>
@@ -466,12 +501,12 @@ export function AdminMatchesTable({ matches, whatsappLink }: { matches: Match[],
                     <Share2 size={16} />
                   </button>
                   <button
-                    disabled={isPending || match.status === 'cancelled'}
+                    disabled={isPending || match.status === 'cancelled' || match.status === 'closed'}
                     onClick={() => {
                         setEvaluatingMatch(match);
                     }}
-                    className={`mr-2 p-1.5 rounded-lg border ${match.status === 'cancelled' ? 'bg-zinc-800 border-zinc-700 text-zinc-600' : 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20'} transition-all inline-flex`}
-                    title="Vyhodnotit docházku a finance"
+                    className={`mr-2 p-1.5 rounded-lg border ${match.status === 'cancelled' || match.status === 'closed' ? 'bg-zinc-800 border-zinc-700 text-zinc-600' : 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20'} transition-all inline-flex`}
+                    title={match.status === 'closed' ? 'Již vyhodnoceno' : 'Vyhodnotit docházku a finance'}
                   >
                     <Check size={16} />
                   </button>
@@ -483,6 +518,16 @@ export function AdminMatchesTable({ matches, whatsappLink }: { matches: Match[],
                       title="Zrušit zápas"
                     >
                       <Ban size={16} />
+                    </button>
+                  )}
+                  {match.status !== 'cancelled' && (
+                    <button
+                      disabled={isPending}
+                      onClick={() => setEditingMatch(match)}
+                      className="mr-2 p-1.5 rounded-lg border bg-blue-500/10 border-blue-500/30 text-blue-500 hover:bg-blue-500/20 transition-all inline-flex"
+                      title="Upravit parametry zápasu"
+                    >
+                      <Pencil size={16} />
                     </button>
                   )}
                   <button
@@ -526,8 +571,16 @@ export function AdminMatchesTable({ matches, whatsappLink }: { matches: Match[],
       
       {evaluatingMatch && (
         <EvaluateMatchModal 
-          match={evaluatingMatch} 
+          match={evaluatingMatch}
+          users={users} 
           onClose={() => setEvaluatingMatch(null)} 
+        />
+      )}
+
+      {editingMatch && (
+        <AdminEditMatchModal 
+          match={editingMatch} 
+          onClose={() => setEditingMatch(null)} 
         />
       )}
 
@@ -652,7 +705,7 @@ export function AdminNewsTable({ news }: { news: News[] }) {
 
 export function AdminTemplatesBox({ templates, whatsappLink }: { templates: MatchTemplate[], whatsappLink?: string }) {
   const [isPending, startTransition] = useTransition();
-  const [shareMatch, setShareMatch] = useState<{title: string, date: string} | null>(null);
+  const [shareMatch, setShareMatch] = useState<{id: string, title: string, date: string} | null>(null);
 
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-xl space-y-4">
@@ -670,7 +723,7 @@ export function AdminTemplatesBox({ templates, whatsappLink }: { templates: Matc
                 {t.title}
               </div>
               <div className="text-xs text-zinc-500 mt-1">
-                Nejbližší {['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'][t.dayOfWeek]} v {t.time} • Kapacita {t.capacity}
+                Nejbližší {['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'][t.dayOfWeek]} v {t.time} • Kap. {t.capacity} • Zámek {t.deadlineDaysBefore === 0 ? 'týž den' : `${t.deadlineDaysBefore} d. předem`} v {t.deadlineTime}
               </div>
             </div>
             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -710,7 +763,7 @@ export function AdminTemplatesBox({ templates, whatsappLink }: { templates: Matc
 
       {shareMatch && (
         <WhatsAppShareModal 
-          matchInfo={{ title: shareMatch.title || 'Florbal', date: shareMatch.date }}
+          matchInfo={{ id: shareMatch.id, title: shareMatch.title || 'Florbal', date: shareMatch.date }}
           whatsappLink={whatsappLink}
           onClose={() => setShareMatch(null)}
         />
@@ -721,7 +774,7 @@ export function AdminTemplatesBox({ templates, whatsappLink }: { templates: Matc
 
 export function AdminCustomMatchForm({ whatsappLink }: { whatsappLink?: string }) {
   const [isPending, startTransition] = useTransition();
-  const [shareMatch, setShareMatch] = useState<{title: string, date: string} | null>(null);
+  const [shareMatch, setShareMatch] = useState<{id: string, title: string, date: string} | null>(null);
 
   return (
     <form 
@@ -783,7 +836,7 @@ export function AdminCustomMatchForm({ whatsappLink }: { whatsappLink?: string }
 
       {shareMatch && (
         <WhatsAppShareModal 
-          matchInfo={{ title: shareMatch.title || 'Florbal', date: shareMatch.date }}
+          matchInfo={{ id: shareMatch.id, title: shareMatch.title || 'Florbal', date: shareMatch.date }}
           whatsappLink={whatsappLink}
           onClose={() => setShareMatch(null)}
         />
@@ -1010,19 +1063,22 @@ function AdminDebtUrovnatForm({ uid, currentDebt }: { uid: string, currentDebt: 
   );
 }
 
-export function EvaluateMatchModal({ match, onClose }: { match: Match, onClose: () => void }) {
+export function EvaluateMatchModal({ match, users, onClose }: { match: Match, users: User[], onClose: () => void }) {
   const [isPending, startTransition] = useTransition();
-  const respondents = match.responses.filter(r => r.status === 'going');
-  const [checkedUids, setCheckedUids] = useState<string[]>(respondents.map(r => r.userId));
+  const respondents = match.responses.filter(r => ['going_player', 'going_goalie', 'playing_player', 'playing_goalie'].includes(r.status));
+  // Výchozí stav: nikdo nemá "odškrtnuto" že zaplatil (všichni jsou bráni jako dlužníci, dokud se neoznačí)
+  const [checkedPaidUids, setCheckedPaidUids] = useState<string[]>([]);
 
   const toggleCheck = (uid: string) => {
-    setCheckedUids(prev => prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]);
+    setCheckedPaidUids(prev => prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]);
   };
 
   const submitEvaluation = () => {
-    if (window.confirm('Hráčům, kteří nemají předplatné a jsou zde zaškrtnutí, se přičte dluh za zápas. Pokračovat?')) {
+    const uidsWithDebt = respondents.map(r => r.uid).filter(uid => !checkedPaidUids.includes(uid));
+    
+    if (window.confirm('Všem NEZAŠKRTNUTÝM hráčům (bez předplatného) se připíše nový dluh k úhradě. Souhlasí to?')) {
       startTransition(() => {
-        evaluateMatchAttendance(match.id, checkedUids).then(() => {
+        evaluateMatchAttendance(match.id, uidsWithDebt).then(() => {
            onClose();
         });
       });
@@ -1039,23 +1095,33 @@ export function EvaluateMatchModal({ match, onClose }: { match: Match, onClose: 
           </button>
         </div>
         <div className="p-5 overflow-y-auto space-y-4">
-          <p className="text-sm text-zinc-400">
-            Zkontroluj, kdo ze zapsaných lidí skutečně hrál. 
-            Systém lidem <b className="text-amber-500">bez předplatného</b> automaticky přičte zápasový poplatek k jejich aktuálnímu dluhu.
-          </p>
+          <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-2xl text-sm text-zinc-300">
+            <p className="mb-2"><b className="text-amber-500">Co s tím?</b> Zaškrtni ty hráče, kteří <b>zaplatili hotově na místě</b> (nebo už víš, že to poslali).</p>
+            <p>Všichni <b className="text-white">nezaškrtnutí</b> (kromě majitelů předplatného) si automaticky vyslouží dluh v sekci Finance & Dlužníci.</p>
+          </div>
           <div className="space-y-2">
             {respondents.length === 0 && <p className="text-zinc-600 text-sm">Na tento zápas se nikdo nepřihlásil.</p>}
-            {respondents.map((r, idx) => (
-              <label key={r.userId} className="flex items-center justify-between p-3 rounded-xl bg-zinc-950/50 border border-zinc-800 cursor-pointer hover:bg-zinc-800/80 transition-colors">
-                <span className="font-semibold text-zinc-200">{idx + 1}. {r.userName}</span>
-                <input 
-                  type="checkbox" 
-                  checked={checkedUids.includes(r.userId)} 
-                  onChange={() => toggleCheck(r.userId)}
-                  className="w-5 h-5 rounded border-zinc-700 bg-zinc-950 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900" 
-                />
-              </label>
-            ))}
+            {respondents.map((r, idx) => {
+              const u = users.find(user => user.uid === r.uid);
+              const displayName = u?.name || 'Neznámý hráč';
+              const isSub = u?.isSubscriber;
+
+              return (
+                <label key={r.uid} className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${isSub ? 'bg-zinc-900 border-zinc-800 opacity-70 cursor-not-allowed' : 'bg-zinc-950/50 border-zinc-800 cursor-pointer hover:bg-zinc-800/80'}`}>
+                  <span className="font-semibold text-zinc-200 flex items-center gap-2">
+                    {idx + 1}. {displayName} 
+                    {isSub && <Star size={14} className="text-amber-500 fill-amber-500" title="Předplatitel" />}
+                  </span>
+                  <input 
+                    type="checkbox" 
+                    disabled={isSub}
+                    checked={isSub ? true : checkedPaidUids.includes(r.uid)} 
+                    onChange={() => !isSub && toggleCheck(r.uid)}
+                    className="w-5 h-5 rounded border-zinc-700 bg-zinc-950 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900 disabled:opacity-50" 
+                  />
+                </label>
+              );
+            })}
           </div>
         </div>
         <div className="p-5 border-t border-zinc-800 bg-zinc-950/30 rounded-b-3xl">
@@ -1072,15 +1138,18 @@ export function EvaluateMatchModal({ match, onClose }: { match: Match, onClose: 
   );
 }
 
-export function WhatsAppShareModal({ matchInfo, whatsappLink, onClose, customTextBody, customModalTitle }: { matchInfo?: {title: string, date: string}, whatsappLink?: string, onClose: () => void, customTextBody?: string, customModalTitle?: string }) {
+export function WhatsAppShareModal({ matchInfo, whatsappLink, onClose, customTextBody, customModalTitle }: { matchInfo?: {id: string, title: string, date: string}, whatsappLink?: string, onClose: () => void, customTextBody?: string, customModalTitle?: string }) {
   let textBody = customTextBody || '';
   if (!customTextBody && matchInfo) {
     const dateStr = new Date(matchInfo.date).toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
     const timeStr = new Date(matchInfo.date).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-    textBody = `🏑 Nový florbal: ${matchInfo.title}\n📅 ${dateStr} v ${timeStr}\n\nHlašte se v apce: ${window.location.origin}`;
+    textBody = `🏑 Nový ${matchInfo.title.toLowerCase()}\n📅 ${dateStr} v ${timeStr}\n\nHlašte se v apce: ${window.location.origin}`;
   }
 
   const [copied, setCopied] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const isDanger = customModalTitle?.toLowerCase().includes('zrušení') || customModalTitle?.toLowerCase().includes('zrušen');
 
   const handleCopyAndGo = () => {
@@ -1094,6 +1163,20 @@ export function WhatsAppShareModal({ matchInfo, whatsappLink, onClose, customTex
     }
     window.open(url, '_blank');
     setTimeout(onClose, 2000);
+  };
+  
+  const handleSendEmail = () => {
+     if (!matchInfo?.id) return;
+     setEmailSending(true);
+     startTransition(() => {
+        sendMatchInvitationEmail(matchInfo.id).then(() => {
+           setEmailSent(true);
+           setEmailSending(false);
+        }).catch(() => {
+           alert('Chyba při odesílání.');
+           setEmailSending(false);
+        });
+     });
   };
 
   return (
@@ -1109,13 +1192,213 @@ export function WhatsAppShareModal({ matchInfo, whatsappLink, onClose, customTex
              {textBody}
           </div>
         </div>
-        <div className="p-3 border-t border-zinc-800 flex items-center justify-between gap-2 mt-2">
+        
+        {/* Email option */}
+        {!isDanger && matchInfo && (
+           <div className="px-5 py-3 border-t border-zinc-800/50">
+             <button
+                onClick={handleSendEmail}
+                disabled={emailSending || emailSent || isPending}
+                className="w-full py-3 rounded-xl border border-zinc-700 bg-zinc-800/50 hover:bg-zinc-800 text-white font-medium text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+             >
+                {emailSending ? <div className="w-4 h-4 border-2 border-zinc-400 border-t-white rounded-full animate-spin"></div> : (emailSent ? <Check size={16} className="text-emerald-500" /> : <Mail size={16} className="text-zinc-400" />)}
+                {emailSending ? 'Odesílám e-maily všem hráčům...' : (emailSent ? 'Rozesláno všem hráčům' : 'Rozeslat automatické pozvánky e-mailem')}
+             </button>
+           </div>
+        )}
+
+        <div className="p-3 border-t border-zinc-800 flex items-center justify-between gap-2">
            <button onClick={onClose} className="px-4 py-3 rounded-xl font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all flex-[0.5]">Zavřít</button>
            <button onClick={handleCopyAndGo} className={`px-4 py-3 rounded-xl font-bold text-white ${isDanger ? 'bg-orange-500 hover:bg-orange-600' : 'bg-emerald-500 hover:bg-emerald-600'} transition-all flex-1 flex items-center justify-center gap-2`}>
-             {!copied ? 'Zkopírovat a přesměrovat' : <><Check size={18} /> Zkopírováno!</>}
+             {!copied ? 'Kopírovat WhatsApp' : <><Check size={18} /> Zkopírováno!</>}
            </button>
         </div>
       </div>
     </div>
   );
 }
+
+export function AdminEmails({ currentUser }: { currentUser: User }) {
+  const [loading, setLoading] = useState<string | null>(null);
+  const [result, setResult] = useState<{id: string, text: string, ok: boolean} | null>(null);
+
+  const templates = [
+    { id: 'ping', name: 'Zkušební PING', desc: 'Čistý technický průstřel serverem bez formátování pro test doručitelnosti.' },
+    { id: 'new-match', name: 'Nová událost (Zápas)', desc: 'Hromadná pozvánka, kterou lze nechat poslat okamžitě po vypsání termínu.' },
+    { id: 'freed-player', name: 'Volné místo: Hráč v poli', desc: 'Hromadné avízo náhradníkům, že se nečekaně uvolnilo místo v poli.' },
+    { id: 'freed-goalie', name: 'Volné místo: Gólman', desc: 'Hromadné avízo brankářům, že vypadl gólman ze sestavy.' },
+    { id: 'password-reset', name: 'Zapomenuté heslo', desc: 'E-mail s unikátním jednorázovým odkazem na reset hesla.' }
+  ];
+  
+  const testEmail = async (templateId: string) => {
+    setLoading(templateId);
+    setResult(null);
+    try {
+      const res = await fetch('/api/admin/test-template', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetEmail: currentUser.email, templateId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setResult({ id: templateId, text: 'Zkušební šablona odeslána!', ok: true });
+    } catch (err: any) {
+      setResult({ id: templateId, text: 'Chyba: ' + err.message, ok: false });
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  return (
+    <div className="bg-zinc-800/50 border border-zinc-700 rounded-2xl overflow-hidden">
+      <div className="p-6 border-b border-zinc-700/50">
+        <h2 className="text-xl font-bold text-white mb-2">E-mailový Katalog Systému</h2>
+        <p className="text-sm text-zinc-400">Zde najdeš výčet všech dynamických šablon v systému. Pomocí testování si každou z nich můžeš nechat poslat na svůj admin e-mail <strong>{currentUser.email}</strong> pro vizuální kontrolu.</p>
+      </div>
+      
+      <div className="divide-y divide-zinc-700/50">
+        {templates.map(tpl => (
+           <div key={tpl.id} className="p-6 flex flex-col sm:flex-row gap-6 justify-between items-start sm:items-center hover:bg-zinc-800/30 transition-colors">
+              <div className="flex-1">
+                 <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-bold text-white">{tpl.name}</h3>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-1">
+                      <Check size={12} /> Aktivní
+                    </span>
+                 </div>
+                 <p className="text-sm text-zinc-500">{tpl.desc}</p>
+                 
+                 {result?.id === tpl.id && (
+                    <div className={cn("mt-3 text-sm font-medium", result.ok ? 'text-emerald-400' : 'text-red-400')}>
+                       {result.ok ? '✅ ' : '❌ '}{result.text}
+                    </div>
+                 )}
+              </div>
+              
+              <button 
+                onClick={() => testEmail(tpl.id)}
+                disabled={loading !== null}
+                className="shrink-0 flex items-center gap-2 bg-zinc-800 hover:bg-rose-500/20 hover:text-rose-400 hover:border-rose-500/30 text-white font-medium py-2 px-4 rounded-xl border border-zinc-700 transition-all disabled:opacity-50"
+              >
+                {loading === tpl.id 
+                  ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> 
+                  : <Send size={16} />
+                }
+                Test na můj mail
+              </button>
+           </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose: () => void }) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const dateLocal = formData.get('date') as string;
+    const timeLocal = formData.get('time') as string;
+    const deadlineDays = formData.get('deadlineDaysBefore') as string;
+    const deadlineTime = formData.get('deadlineTime') as string;
+    const capacityStr = formData.get('capacity') as string;
+    const titleStr = formData.get('title') as string;
+
+    const [hours, minutes] = timeLocal.split(':').map(Number);
+    const [dlHours, dlMinutes] = deadlineTime.split(':').map(Number);
+    const dateObj = new Date(dateLocal);
+    dateObj.setHours(hours, minutes, 0, 0);
+
+    const matchDateIso = dateObj.toISOString();
+
+    const dlDateObj = new Date(dateObj.getTime());
+    dlDateObj.setDate(dlDateObj.getDate() - Number(deadlineDays));
+    dlDateObj.setHours(dlHours, dlMinutes, 0, 0);
+    const deadlineIso = dlDateObj.toISOString();
+
+    startTransition(() => {
+      import('@/app/actions/admin').then((m) => {
+        m.editMatch(match.id, titleStr || match.title || '', matchDateIso, Number(capacityStr || match.capacity), deadlineIso).then(() => {
+          onClose();
+        });
+      });
+    });
+  }
+
+  // Pre-fill
+  const md = new Date(match.date);
+  const dld = new Date(match.deadline);
+
+  // formatting yyyy-mm-dd format local timezone
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const dYr = md.getFullYear();
+  const dMo = pad(md.getMonth() + 1);
+  const dDa = pad(md.getDate());
+  const initialDateStr = `${dYr}-${dMo}-${dDa}`;
+  const initialTimeStr = `${pad(md.getHours())}:${pad(md.getMinutes())}`;
+
+  // calculate days between deadline and match
+  // reset hours to midnight to compare just days
+  const mdMidnight = new Date(md.getTime()); mdMidnight.setHours(0,0,0,0);
+  const dlMidnight = new Date(dld.getTime()); dlMidnight.setHours(0,0,0,0);
+  const diffTime = Math.abs(mdMidnight.getTime() - dlMidnight.getTime());
+  const initialDeadlineDaysBefore = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const initialDeadlineTimeStr = `${pad(dld.getHours())}:${pad(dld.getMinutes())}`;
+
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+      <div className="bg-zinc-900 border border-zinc-800 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="p-4 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/50">
+          <h3 className="font-bold text-white flex items-center gap-2">
+            <Pencil className="text-blue-500" size={18} /> Editace zápasu
+          </h3>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors p-1"><X size={20}/></button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+           <div>
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Popis (Název)</label>
+              <input name="title" defaultValue={match.title || ''} type="text" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" placeholder="Např. Přátelák, Nedělní hra..." />
+           </div>
+
+           <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Datum</label>
+                <input name="date" required defaultValue={initialDateStr} type="date" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+              </div>
+              <div className="w-24">
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Čas</label>
+                <input name="time" required defaultValue={initialTimeStr} type="time" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+              </div>
+           </div>
+
+           <div>
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Max. kapacita hráčů v poli</label>
+              <input name="capacity" defaultValue={match.capacity} type="number" min="1" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+           </div>
+
+           <div>
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Uzávěrka (Dní před termínem)</label>
+              <div className="flex gap-2 items-center">
+                 <input name="deadlineDaysBefore" required defaultValue={initialDeadlineDaysBefore} type="number" min="0" max="14" className="w-20 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors text-center" />
+                 <span className="text-zinc-500 text-sm">dní před v</span>
+                 <input name="deadlineTime" required defaultValue={initialDeadlineTimeStr} type="time" className="w-24 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+              </div>
+           </div>
+
+           <div className="pt-2">
+             <button disabled={isPending} type="submit" className="w-full bg-blue-500 hover:bg-blue-600 font-bold text-white py-3 rounded-xl transition-colors">
+                {isPending ? 'Ukládám...' : 'Uložit změny'}
+             </button>
+           </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+
+
+

@@ -3,6 +3,7 @@
 import { getDb, saveDb } from '@/lib/db';
 import { getCurrentUser } from './auth';
 import { revalidatePath } from 'next/cache';
+import { sendEmail } from '@/lib/mailer';
 
 async function checkAdmin() {
   const user = await getCurrentUser();
@@ -101,7 +102,7 @@ export async function createCustomMatch(dateIso: string, capacity: number, title
   revalidatePath('/dashboard');
   revalidatePath('/admin');
   
-  return { title: newMatch.title, date: newMatch.date };
+  return { id: newMatch.id, title: newMatch.title, date: newMatch.date };
 }
 
 export async function addMatchTemplate(title: string, dayOfWeek: number, time: string, capacity: number, deadlineDaysBefore: number, deadlineTime: string) {
@@ -181,7 +182,7 @@ export async function createMatchFromTemplate(templateId: string) {
   revalidatePath('/dashboard');
   revalidatePath('/admin');
 
-  return { title: newMatch.title, date: newMatch.date };
+  return { id: newMatch.id, title: newMatch.title, date: newMatch.date };
 }
 
 export async function deleteMatch(matchId: string) {
@@ -191,6 +192,21 @@ export async function deleteMatch(matchId: string) {
   await saveDb(db);
   revalidatePath('/dashboard');
   revalidatePath('/admin');
+}
+
+export async function editMatch(matchId: string, title: string, dateIso: string, capacity: number, deadlineIso: string) {
+  await checkAdmin();
+  const db = await getDb();
+  const match = db.matches.find(m => m.id === matchId);
+  if (match) {
+    match.title = title;
+    match.date = dateIso;
+    match.capacity = Number(capacity);
+    match.deadline = deadlineIso;
+    await saveDb(db);
+    revalidatePath('/dashboard');
+    revalidatePath('/admin');
+  }
 }
 
 export async function cancelMatch(matchId: string) {
@@ -224,6 +240,37 @@ export async function toggleNewsPin(newsId: string) {
     revalidatePath('/dashboard');
     revalidatePath('/admin');
   }
+}
+
+export async function deleteUser(uid: string) {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || currentUser.role !== 'admin') {
+    throw new Error('Unauthorized');
+  }
+  
+  if (uid === 'admin1' || currentUser.email === 'admin@florbal.cz' ? false : (currentUser.email === 'erik.nemec@me.com' && uid === currentUser.uid)) {
+     throw new Error('Nelze smazat hlavní systémový účet.');
+  }
+
+  // Nemůžu smazat sám sebe jako admin (ochrana)
+  if (currentUser.uid === uid) {
+     throw new Error('Nemůžete smazat svůj vlastní účet.');
+  }
+
+  const db = await getDb();
+  
+  // Odebrání z databáze uživatelů
+  db.users = db.users.filter(u => u.uid !== uid);
+  
+  // Bylo by vhodné smazat i jeho přihlášky k zápasům? Ano.
+  for (const match of db.matches) {
+     if (match.responses) {
+        match.responses = match.responses.filter(r => r.uid !== uid);
+     }
+  }
+
+  await saveDb(db);
+  revalidatePath('/admin');
 }
 
 export async function resetSubscribers() {
@@ -266,17 +313,41 @@ export async function evaluateMatchAttendance(matchId: string, attendedUserIds: 
     const user = db.users.find(u => u.uid === uid);
     if (user && !user.isSubscriber) {
        user.debt = (user.debt || 0) + matchFee;
-       modified = true;
     }
   });
   
-  // Volitelně můžeme zápas označit jako "evaluated: true" aby se finančně nehodnotil dvakrát
-  // const match = db.matches.find(m => m.id === matchId);
-  // if (match) match.isEvaluated = true;
-  
-  if (modified) {
-    await saveDb(db);
-    revalidatePath('/admin');
-    revalidatePath('/dashboard');
+  // Zápas se musí vždy označit jako vyhodnocený/uzavřený
+  const match = db.matches.find(m => m.id === matchId);
+  if (match) {
+     match.status = 'closed';
   }
+  
+  await saveDb(db);
+  revalidatePath('/admin');
+  revalidatePath('/dashboard');
+}
+
+export async function sendMatchInvitationEmail(matchId: string) {
+  await checkAdmin();
+  const db = await getDb();
+  
+  const match = db.matches.find(m => m.id === matchId);
+  if (!match) throw new Error('Zápas nenalezen');
+
+  const targetEmails = db.users
+     .filter(u => u.emailNotifications !== false)
+     .map(u => u.email);
+
+  if (targetEmails.length === 0) return;
+
+  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const matchDate = new Date(match.date);
+  const dateStr = matchDate.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
+  const timeStr = matchDate.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+  
+  await sendEmail({
+     to: targetEmails,
+     subject: `🏑 Vypsán nový florbal: ${match.title || 'Trénink'}`,
+     html: `<h3>Nový termín otevřen!</h3><p>Právě byl vypsán nový florbalový zápas na <b>${dateStr} v ${timeStr}</b>.</p><p>Kdo dřív přijde, ten hraje.</p><br/><a href="${baseUrl}/dashboard" style="background:#10b981;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;font-weight:bold;">Přihlásit se na zápas</a>`
+  });
 }

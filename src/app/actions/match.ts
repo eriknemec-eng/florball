@@ -3,6 +3,7 @@
 import { getDb, saveDb } from '@/lib/db';
 import { getCurrentUser } from './auth';
 import { revalidatePath } from 'next/cache';
+import { sendEmail } from '@/lib/mailer';
 
 export async function respondToMatch(matchId: string, statusText: 'going_player' | 'going_goalie' | 'not_going' | 'maybe') {
   const user = await getCurrentUser();
@@ -70,15 +71,40 @@ export async function respondToMatch(matchId: string, statusText: 'going_player'
 
   match.responses = responses;
 
-  // Fake Stub trigger for mail (kdykoliv se někdo odhlásí v uzamčený fázi a uvolní kapacitu)
+  // Rozesílání emailů o uvolněné kapacitě při odhlášení
   if (match.lockPhase === 'phase2_locked' && statusText === 'not_going') {
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      
       const pPlaying = responses.filter(r => r.status === 'playing_player').length;
       if (pPlaying < 12) {
-          console.log(`[BREVO STUB] Uvolnilo se místo pro HRÁČE! Odesílám mail všem 'reserve_player' a nepřihlášeným u zápasu ${matchId}.`);
+          const reserveUids = responses.filter(r => r.status === 'reserve_player').map(r => r.uid);
+          const reserveEmails = db.users
+            .filter(u => reserveUids.includes(u.uid) && u.emailNotifications !== false)
+            .map(u => u.email);
+          
+          if (reserveEmails.length > 0) {
+              await sendEmail({
+                  to: reserveEmails,
+                  subject: '🔥 Uvolnilo se místo pro HRÁČE',
+                  html: `<h3>Šance naskočit!</h3><p>Někdo se právě odhlásil ze zápasu a díky tomu se v poli uvolnilo místo. Kdo z náhradníků dřív přijde a potvrdí účast, ten hraje.</p><a href="${baseUrl}/dashboard" style="background:#10b981;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">Jít rychle na palubovku</a>`
+              });
+          }
       }
+      
       const gPlaying = responses.filter(r => r.status === 'playing_goalie').length;
       if (gPlaying < 2) {
-          console.log(`[BREVO STUB] Uvolnilo se místo pro GÓLMANA! Odesílám mail všem 'reserve_goalie' a nepřihlášeným u zápasu ${matchId}.`);
+          const reserveUids = responses.filter(r => r.status === 'reserve_goalie').map(r => r.uid);
+          const reserveEmails = db.users
+            .filter(u => reserveUids.includes(u.uid) && u.emailNotifications !== false)
+            .map(u => u.email);
+          
+          if (reserveEmails.length > 0) {
+              await sendEmail({
+                  to: reserveEmails,
+                  subject: '🔥 Uvolnilo se místo v BRÁNĚ',
+                  html: `<h3>Šance na chytání!</h3><p>Jeden z gólmanů odpadl a uvolnilo se místo. Skoč po tom jako tygr!</p><a href="${baseUrl}/dashboard" style="background:#10b981;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">Jít rychle na palubovku</a>`
+              });
+          }
       }
   }
 

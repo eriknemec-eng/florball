@@ -34,12 +34,13 @@ export default async function DashboardPage() {
             <h2 className="text-2xl font-bold text-white mb-1">Ahoj, {user.name.split(' ')[0]}!</h2>
             <p className="text-zinc-400">Tady je tvůj přehled událostí.</p>
           </div>
+          
           {db.settings?.whatsappLink && (
             <a 
               href={db.settings.whatsappLink.trim()}
               target="_blank"
               style={{ backgroundColor: '#25D366', color: 'white' }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all shrink-0 shadow-sm hover:brightness-110"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm hover:brightness-110"
             >
               <MessageCircle size={16} />
               WhatsApp Skupina

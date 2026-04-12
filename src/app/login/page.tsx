@@ -3,6 +3,7 @@
 import { signIn } from 'next-auth/react';
 import { ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -53,7 +54,7 @@ export default function LoginPage() {
 
         <div className="relative flex py-2 items-center mb-6">
           <div className="flex-grow border-t border-zinc-700"></div>
-          <span className="flex-shrink-0 mx-4 text-zinc-500 text-sm">nebo ručně přes heslo</span>
+          <span className="flex-shrink-0 mx-4 text-zinc-500 text-sm">nebo E-mailem a heslem</span>
           <div className="flex-grow border-t border-zinc-700"></div>
         </div>
 
@@ -78,6 +79,13 @@ export default function LoginPage() {
               className="w-full bg-zinc-900 border border-zinc-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
             />
           </div>
+          
+          <div className="flex justify-end mt-1">
+             <Link href="/forgot-password" className="text-sm text-zinc-400 hover:text-emerald-400">
+                Zapomenuté heslo?
+             </Link>
+          </div>
+
           <button 
             type="submit"
             disabled={loading}
@@ -87,10 +95,14 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-zinc-700/50">
-          <p className="text-xs text-center text-emerald-400 font-medium">
-            Ostré ověřování aktivováno. Nepůjde se přihlásit náhodným e-mailem.
-          </p>
+        <div className="mt-8 pt-6 border-t border-zinc-700/50 flex flex-col items-center gap-3">
+          <p className="text-zinc-300">Nemáš u nás účet?</p>
+          <Link 
+            href="/register" 
+            className="w-full border border-emerald-500/50 hover:bg-emerald-500/10 text-emerald-400 text-center font-semibold py-3 px-4 rounded-xl transition-all"
+          >
+            Zaregistrovat (zabere to 3 minuty)
+          </Link>
         </div>
       </div>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { Shield, ShieldAlert, ArrowRightLeft } from 'lucide-react';
-import { setMyPosition } from '@/app/actions/auth';
+import { updateUserProfile } from '@/app/actions/auth';
 import { cn } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 
@@ -14,7 +14,7 @@ export function ProfileSetup() {
   const handleSave = () => {
     if (!selected) return;
     startTransition(() => {
-      setMyPosition(selected).then(() => {
+      updateUserProfile('', selected).then(() => {
         router.refresh();
       });
     });
