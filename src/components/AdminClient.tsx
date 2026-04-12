@@ -400,7 +400,7 @@ export function AdminSettingsForm({ defaultSettings }: { defaultSettings: any })
           className="w-full bg-zinc-950 border border-zinc-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
         />
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <label className="text-xs text-zinc-500 ml-1 mb-1 block">Předplatné (Kč)</label>
           <input 
@@ -804,7 +804,7 @@ export function AdminCustomMatchForm({ whatsappLink }: { whatsappLink?: string }
       
       <div className="space-y-3 flex-1">
         <input type="text" name="title" defaultValue="Pondělní florbálek" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Datum zápasu</label>
             <input type="date" name="date" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
@@ -814,7 +814,7 @@ export function AdminCustomMatchForm({ whatsappLink }: { whatsappLink?: string }
             <input type="time" name="time" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Uzávěrka Dne</label>
             <input type="date" name="deadlineDate" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
@@ -872,7 +872,7 @@ export function AdminNewTemplateForm() {
       
       <div className="space-y-3 flex-1">
         <input type="text" name="title" defaultValue="Pondělní florbálek" placeholder="Název ročníku / hry" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Hrací den</label>
             <select name="dayOfWeek" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-500/50">
@@ -890,7 +890,7 @@ export function AdminNewTemplateForm() {
             <input type="time" name="time" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Uzávěrka X dnů před</label>
             <input type="number" name="deadlineDaysBefore" min="0" defaultValue="1" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
