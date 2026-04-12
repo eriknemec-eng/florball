@@ -9,7 +9,7 @@ import { ProfileSetup } from "@/components/ProfileSetup";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Floorball Attendance",
+  title: "Florball",
   description: "Správa docházky pro florbal",
 };
 
