@@ -32,7 +32,8 @@ export async function sendEmail({
   const mailOptions = {
     from: `"Pondělní florbálek" <${from}>`,
     replyTo: 'erik.nemec@me.com',
-    to, // Může přijmout i pole a rozešle jednotlivě nebo hromadně
+    to: from, // Pošleme primárně "sami sobě"
+    bcc: to,  // Skrytá kopie všem lidem (ochrana soukromí + bypass Brevo spam filtru)
     subject,
     html,
   };
