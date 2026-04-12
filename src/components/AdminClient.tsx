@@ -494,7 +494,7 @@ export function AdminMatchesTable({ matches, users, whatsappLink }: { matches: M
                 <td className="px-4 py-3 text-center">
                   <button
                     disabled={isPending}
-                    onClick={() => setShareMatch({title: match.title || 'Florbal', date: match.date})}
+                    onClick={() => setShareMatch({id: match.id, title: match.title || 'Florbal', date: match.date})}
                     className="mr-2 p-1.5 rounded-lg border bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700 transition-all inline-flex"
                     title="Sdílet na WhatsApp"
                   >
