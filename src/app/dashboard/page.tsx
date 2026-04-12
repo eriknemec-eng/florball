@@ -2,6 +2,7 @@ import { getCurrentUser } from '@/app/actions/auth';
 import { getDb } from '@/lib/db';
 import { redirect } from 'next/navigation';
 import { MatchCard } from '@/components/MatchCard';
+import { MobileNewsBanner } from '@/components/MobileNewsBanner';
 import { MessageCircle, Info, Pin, LayoutGrid } from 'lucide-react';
 
 export default async function DashboardPage() {
@@ -22,7 +23,6 @@ export default async function DashboardPage() {
 
   const pinnedNews = db.news.filter(n => n.isPinned);
   const regularNews = db.news.filter(n => !n.isPinned);
-  const topNews = pinnedNews.length > 0 ? pinnedNews[0] : (regularNews.length > 0 ? regularNews[0] : null);
 
   return (
     <div className="flex flex-col md:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -49,24 +49,8 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        {/* Mobile News Banner (Varianta A) - Zobrazí pouze 1 nejnovější Nástěnku na mobilech */}
-        {topNews && (
-          <section className="md:hidden animate-in fade-in zoom-in-95 duration-300">
-            <h3 className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 mb-2 flex items-center gap-1.5">
-              Nová zpráva na nástěnce
-            </h3>
-            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 shadow-[0_0_15px_rgba(16,185,129,0.15)] flex items-start gap-3 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none"></div>
-              <div className="relative mt-0.5">
-                {topNews.isPinned ? <Pin size={18} className="text-emerald-400 rotate-45" /> : <Info size={18} className="text-emerald-400" />}
-              </div>
-              <div className="relative">
-                <h4 className="text-sm font-bold text-emerald-50 mb-1">{topNews.title}</h4>
-                <p className="text-sm text-emerald-100/90 leading-relaxed whitespace-pre-wrap">{topNews.content}</p>
-              </div>
-            </div>
-          </section>
-        )}
+        {/* Mobile News Banner (Varianta A) - Zobrazí pouze 1 nejnovější Nástěnku na mobilech + Modal */}
+        <MobileNewsBanner allNews={db.news} />
 
         {/* Finance Alert Box */}
         {(user.isSubscriber && !user.hasPaid) && (
