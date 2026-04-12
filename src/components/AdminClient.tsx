@@ -807,21 +807,21 @@ export function AdminCustomMatchForm({ whatsappLink }: { whatsappLink?: string }
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Datum zápasu</label>
-            <input type="date" name="date" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+            <input type="date" name="date" required className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Čas zápasu</label>
-            <input type="time" name="time" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+            <input type="time" name="time" required className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Uzávěrka Dne</label>
-            <input type="date" name="deadlineDate" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+            <input type="date" name="deadlineDate" required className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Uzávěrka v (Čas)</label>
-            <input type="time" name="deadlineTime" defaultValue="12:00" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+            <input type="time" name="deadlineTime" defaultValue="12:00" required className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
         </div>
         <div>
@@ -887,7 +887,7 @@ export function AdminNewTemplateForm() {
           </div>
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Hrací čas</label>
-            <input type="time" name="time" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+            <input type="time" name="time" required className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -897,7 +897,7 @@ export function AdminNewTemplateForm() {
           </div>
           <div>
             <label className="text-xs text-zinc-500 ml-1 mb-1 block">Uzávěrka v (Čas)</label>
-            <input type="time" name="deadlineTime" defaultValue="12:00" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+            <input type="time" name="deadlineTime" defaultValue="12:00" required className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
         </div>
         <div>
@@ -1366,11 +1366,11 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
            <div className="flex gap-3">
               <div className="flex-1">
                 <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Datum</label>
-                <input name="date" required defaultValue={initialDateStr} type="date" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+                <input name="date" required defaultValue={initialDateStr} type="date" className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
               </div>
               <div className="w-24">
                 <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Čas</label>
-                <input name="time" required defaultValue={initialTimeStr} type="time" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+                <input name="time" required defaultValue={initialTimeStr} type="time" className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
               </div>
            </div>
 
@@ -1384,7 +1384,7 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
               <div className="flex gap-2 items-center">
                  <input name="deadlineDaysBefore" required defaultValue={initialDeadlineDaysBefore} type="number" min="0" max="14" className="w-20 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors text-center" />
                  <span className="text-zinc-500 text-sm">dní před v</span>
-                 <input name="deadlineTime" required defaultValue={initialDeadlineTimeStr} type="time" className="w-24 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+                 <input name="deadlineTime" required defaultValue={initialDeadlineTimeStr} type="time" className="w-24 min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
               </div>
            </div>
 
