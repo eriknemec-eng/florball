@@ -1110,7 +1110,7 @@ export function EvaluateMatchModal({ match, users, onClose }: { match: Match, us
                 <label key={r.uid} className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${isSub ? 'bg-zinc-900 border-zinc-800 opacity-70 cursor-not-allowed' : 'bg-zinc-950/50 border-zinc-800 cursor-pointer hover:bg-zinc-800/80'}`}>
                   <span className="font-semibold text-zinc-200 flex items-center gap-2">
                     {idx + 1}. {displayName} 
-                    {isSub && <Star size={14} className="text-amber-500 fill-amber-500" title="Předplatitel" />}
+                    {isSub && <span title="Předplatitel"><Star size={14} className="text-amber-500 fill-amber-500" /></span>}
                   </span>
                   <input 
                     type="checkbox" 
