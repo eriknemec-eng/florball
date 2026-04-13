@@ -1,7 +1,7 @@
 import { getCurrentUser } from '../actions/auth';
 import { getDb } from '@/lib/db';
 import { redirect } from 'next/navigation';
-import { AdminUsersTable, AdminNewsForm, AdminMatchesTable, AdminNewsTable, AdminTabs, AdminTemplatesBox, AdminCustomMatchForm, AdminNewTemplateForm, AdminSettingsForm, AdminFinanceBox, AdminEmails } from '@/components/AdminClient';
+import { AdminUsersTable, AdminNewsForm, AdminMatchesTable, AdminNewsTable, AdminTabs, AdminTemplatesBox, AdminCustomMatchForm, AdminNewTemplateForm, AdminSettingsForm, AdminFinanceBox, AdminEmails, AdminMatchesSection } from '@/components/AdminClient';
 import { ShieldAlert } from 'lucide-react';
 
 export default async function AdminPage() {
@@ -25,25 +25,7 @@ export default async function AdminPage() {
 
       <AdminTabs 
         matchesSection={
-          <div className="space-y-6">
-            <AdminTemplatesBox templates={db.templates} whatsappLink={db.settings?.whatsappLink} />
-            
-            <div className="flex flex-col md:flex-row gap-6">
-              <div className="flex-1">
-                <AdminCustomMatchForm whatsappLink={db.settings?.whatsappLink} />
-              </div>
-              <div className="flex-1">
-                <AdminNewTemplateForm />
-              </div>
-            </div>
-            
-            <section className="space-y-4">
-              <div className="flex items-end justify-between">
-                <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Historie a Plánované zápasy</h3>
-              </div>
-              <AdminMatchesTable matches={db.matches} users={db.users} whatsappLink={db.settings?.whatsappLink} />
-            </section>
-          </div>
+          <AdminMatchesSection matches={db.matches} templates={db.templates} users={db.users} whatsappLink={db.settings?.whatsappLink} />
         }
         usersSection={
           <section className="space-y-4">
@@ -72,7 +54,7 @@ export default async function AdminPage() {
         financeSection={
           <section className="space-y-4">
             <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Finance & Dlužníci</h3>
-            <AdminFinanceBox users={db.users} />
+            <AdminFinanceBox users={db.users} whatsappLink={db.settings?.whatsappLink} />
           </section>
         }
         emailsSection={

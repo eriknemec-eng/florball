@@ -11,14 +11,22 @@ export default async function DashboardPage() {
 
   const db = await getDb();
   
-  const cutoffTime = Date.now() - 4 * 60 * 60 * 1000; // 4 hours after match date
+  const now = Date.now();
   const rawMatches = db.matches.map(m => {
     const isLocked = m.lockPhase === 'phase2_locked' || m.status === 'closed';
-    return { ...m, isLocked };
+    const startTimeMs = new Date(m.date).getTime();
+    const durationMs = (m.durationMinutes || 90) * 60 * 1000;
+    const endTimeMs = startTimeMs + durationMs;
+    
+    let matchState: 'upcoming' | 'ongoing' | 'ended' = 'upcoming';
+    if (now >= endTimeMs) matchState = 'ended';
+    else if (now >= startTimeMs && now < endTimeMs) matchState = 'ongoing';
+
+    return { ...m, isLocked, matchState, endTimeMs };
   });
   
-  const matches = rawMatches
-    .filter(m => new Date(m.date).getTime() > cutoffTime)
+  const activeMatches = rawMatches
+    .filter(m => m.matchState !== 'ended')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const pinnedNews = db.news.filter(n => n.isPinned);
@@ -85,15 +93,21 @@ export default async function DashboardPage() {
             </h3>
           </div>
           <div className="space-y-6 pb-2">
-            {matches.map(match => (
-              <MatchCard key={match.id} match={match} currentUser={user} allUsers={db.users} whatsappLink={db.settings?.whatsappLink} />
+            {activeMatches.map(match => (
+              <MatchCard key={match.id} match={match} currentUser={user} allUsers={db.users} whatsappLink={db.settings?.whatsappLink} matchState={match.matchState} />
             ))}
-            {matches.length === 0 && (
+            {activeMatches.length === 0 && (
               <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-3xl p-8 flex flex-col items-center justify-center text-center">
                 <p className="text-zinc-500 font-medium">V tuto chvíli nejsou vypsány žádné zápasy.</p>
                 <p className="text-zinc-600 text-sm mt-1">Počkej, až administrátor vypíše další termín.</p>
               </div>
             )}
+          </div>
+          
+          <div className="pt-4 flex justify-center">
+             <a href="/history" className="text-sm font-semibold text-zinc-500 hover:text-zinc-300 transition-colors bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800 px-6 py-3 rounded-full flex items-center gap-2">
+               Zobrazit historii zápasů <span className="text-lg leading-none">&rarr;</span>
+             </a>
           </div>
         </section>
       </div>

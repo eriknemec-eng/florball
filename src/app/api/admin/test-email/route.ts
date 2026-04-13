@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cílový e-mail chybí' }, { status: 400 });
     }
 
-    const customHost = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const customHost = process.env.NEXTAUTH_URL || 'https://fb.erikhack.com';
 
     await sendEmail({
       to: targetEmail,

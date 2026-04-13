@@ -20,9 +20,10 @@ interface MatchCardProps {
   currentUser: User;
   allUsers?: User[];
   whatsappLink?: string;
+  matchState?: 'upcoming' | 'ongoing' | 'ended';
 }
 
-export function MatchCard({ match, currentUser, allUsers = [], whatsappLink }: MatchCardProps) {
+export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, matchState = 'upcoming' }: MatchCardProps) {
   const [isPending, startTransition] = useTransition();
   const [showPlayers, setShowPlayers] = useState(false);
 
@@ -83,8 +84,8 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink }: M
   const isFullGoaliesP2 = playingGoaliesP2.length >= 2;
 
   // Vyhodnocení toho, jestli se mi tlacitka vubec daji mackat
-  const canClickPlayer = isCancelledAdmin ? false : isClosedAdmin ? false : isPhase1 ? true : (!isFullPlayersP2 || myStatus === 'playing_player');
-  const canClickGoalie = isCancelledAdmin ? false : isClosedAdmin ? false : isPhase1 ? true : (!isFullGoaliesP2 || myStatus === 'playing_goalie');
+  const canClickPlayer = matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (isPhase1 || (!isFullPlayersP2 || myStatus === 'playing_player'));
+  const canClickGoalie = matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (isPhase1 || (!isFullGoaliesP2 || myStatus === 'playing_goalie'));
 
   const matchDate = new Date(match.date);
   const deadlineDate = new Date(match.deadline);
@@ -117,6 +118,14 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink }: M
           <span className="bg-red-500/10 text-red-500 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full border border-red-500/20 whitespace-nowrap text-right flex-shrink-0">
             Uzavřeno
           </span>
+        ) : matchState === 'ended' ? (
+          <span className="bg-zinc-800 text-zinc-500 text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full border border-zinc-700 whitespace-nowrap text-right flex-shrink-0">
+            ZÁPAS JIŽ PROBĚHL
+          </span>
+        ) : matchState === 'ongoing' ? (
+           <span className="bg-amber-500 text-zinc-950 text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full border border-amber-400 whitespace-nowrap text-right flex-shrink-0 animate-pulse">
+             PRÁVĚ PROBÍHÁ 🟢
+           </span>
         ) : isPhase1 ? (
           <div className="text-right flex-shrink-0">
              <span className="bg-emerald-500/10 text-emerald-500 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap mb-1 inline-block">
@@ -252,13 +261,13 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink }: M
            {/* Možná */}
            <button 
             onClick={() => handleRespond('maybe')}
-            disabled={isPending || isClosedAdmin || isCancelledAdmin}
+            disabled={isPending || isClosedAdmin || isCancelledAdmin || matchState !== 'upcoming'}
             className={cn(
               "rounded-xl text-[10px] sm:text-sm font-semibold transition-all flex flex-col justify-center items-center gap-1 border border-transparent h-full min-h-[64px]",
               myStatus === 'maybe' 
                 ? "bg-zinc-700/80 text-white border-zinc-500 shadow-inner"
                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300 border-zinc-700/50",
-              (isClosedAdmin || isCancelledAdmin) && myStatus !== 'maybe' && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400"
+              (isClosedAdmin || isCancelledAdmin || matchState !== 'upcoming') && myStatus !== 'maybe' && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400"
             )}
           >
              <HelpCircle size={18} />
@@ -268,13 +277,13 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink }: M
            {/* Nejdu */}
            <button 
             onClick={() => handleRespond('not_going')}
-            disabled={isPending || isClosedAdmin || isCancelledAdmin}
+            disabled={isPending || isClosedAdmin || isCancelledAdmin || matchState !== 'upcoming'}
             className={cn(
               "rounded-xl text-[10px] sm:text-sm font-semibold transition-all flex flex-col justify-center items-center gap-1 border border-transparent h-full min-h-[64px]",
               myStatus === 'not_going' 
                 ? "bg-red-500/10 text-red-500 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)] bg-opacity-20"
                 : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-red-400 border-zinc-700/50",
-              (isClosedAdmin || isCancelledAdmin) && myStatus !== 'not_going' && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400"
+              (isClosedAdmin || isCancelledAdmin || matchState !== 'upcoming') && myStatus !== 'not_going' && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400"
             )}
           >
              <X size={18} className={myStatus === 'not_going' ? 'stroke-[3]' : ''} />
@@ -398,7 +407,7 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink }: M
     </div>
 
     {showWhatsAppPrompt && (() => {
-        const cancelTextBody = `🚨 Sorry lidi, musím florbal (${matchDate.toLocaleDateString('cs-CZ')}) odpískat. Uvolnilo se tím pádem MÍSTO! 🏃‍♂️ Kdo se první přihlásí v appce, hraje. 🏑\n\nHlašte se v apce: ${window.location.origin}`;
+        const cancelTextBody = `🚨 Sorry lidi, musím florbal (${matchDate.toLocaleDateString('cs-CZ')}) odpískat. Uvolnilo se tím pádem MÍSTO! 🏃‍♂️ Kdo se první přihlásí v appce, hraje. 🏑\n\nHlašte se v apce: https://fb.erikhack.com`;
         
         const handleCopyAndGoCancel = () => {
           navigator.clipboard.writeText(cancelTextBody);

@@ -40,6 +40,7 @@ export interface Match {
   deadline: string; // ISO string deadline pro vytvoření čáry
   lockPhase: 'phase1_open' | 'phase2_locked';
   capacity: number;
+  durationMinutes?: number;
   responses: MatchResponse[];
 }
 
@@ -59,6 +60,7 @@ export interface MatchTemplate {
   deadlineDaysBefore: number; // 1 = sobota
   deadlineTime: string;       // "12:00"
   capacity: number;
+  durationMinutes?: number;
 }
 
 export interface Database {
@@ -89,7 +91,8 @@ const DEFAULT_DB: Database = {
       time: '18:30',
       deadlineDaysBefore: 2, // Sobota
       deadlineTime: '12:00',
-      capacity: 14
+      capacity: 14,
+      durationMinutes: 90
     }
   ]
 };
@@ -121,6 +124,10 @@ export async function getDb(): Promise<Database> {
       }
       if (!m.lockPhase) {
          m.lockPhase = 'phase1_open';
+      }
+      if (!m.durationMinutes) {
+         m.durationMinutes = 90;
+         needsSave = true;
       }
 
       m.responses.forEach((r: any) => {

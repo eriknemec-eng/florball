@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     user.resetPasswordExpires = tokenExpiration;
     await saveDb(db);
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXTAUTH_URL || 'https://fb.erikhack.com';
     const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
 
     await sendEmail({

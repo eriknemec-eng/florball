@@ -2,7 +2,7 @@
 
 import { useTransition, useState } from 'react';
 import { User, Match, News, MatchTemplate } from '@/lib/db';
-import { editMatch, cancelMatch, deleteUser, deleteMatch, toggleUserStatus, changeUserPosition, addNews, deleteNews, toggleNewsPin, deleteMatchTemplate, addMatchTemplate, updateSettings, toggleUserRole, resetSubscribers, resolveDebt, evaluateMatchAttendance, createMatchFromTemplate, createCustomMatch, sendMatchInvitationEmail } from '@/app/actions/admin';
+import { editMatch, cancelMatch, deleteUser, deleteMatch, toggleUserStatus, changeUserPosition, addNews, deleteNews, toggleNewsPin, deleteMatchTemplate, addMatchTemplate, updateSettings, toggleUserRole, resetSubscribers, resolveDebt, evaluateMatchAttendance, createMatchFromTemplate, createCustomMatch, sendMatchInvitationEmail, sendDebtReminderEmail } from '@/app/actions/admin';
 import { Pencil, Ban, Check, X, Shield, Star, DollarSign, Send, Trash2, Pin, Calendar, CalendarPlus, ChevronLeft, ChevronRight, LayoutList, Users, MessageSquare, Plus, Settings, Banknote, Share2, ArrowLeft, Mail, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -116,6 +116,59 @@ export function AdminTabs({
   );
 }
 
+export function AdminMatchesSection({ matches, templates, users, whatsappLink }: { matches: Match[], templates: MatchTemplate[], users: User[], whatsappLink?: string }) {
+  const [activeTab, setActiveTab] = useState<'create' | 'manage'>('create');
+
+  return (
+    <div className="space-y-6">
+      <div className="flex p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-sm mb-6">
+        <button
+          onClick={() => setActiveTab('create')}
+          className={cn(
+            "flex-1 py-2 text-sm font-semibold rounded-lg transition-colors text-center",
+            activeTab === 'create' ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+          )}
+        >
+          Přidat nový
+        </button>
+        <button
+          onClick={() => setActiveTab('manage')}
+          className={cn(
+            "flex-1 py-2 text-sm font-semibold rounded-lg transition-colors text-center",
+            activeTab === 'manage' ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+          )}
+        >
+          Seznam a Historie
+        </button>
+      </div>
+
+      {activeTab === 'create' && (
+        <div className="space-y-6 animate-in fade-in duration-300">
+          <AdminTemplatesBox templates={templates} whatsappLink={whatsappLink} />
+          
+          <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-1">
+              <AdminCustomMatchForm whatsappLink={whatsappLink} />
+            </div>
+            <div className="flex-1">
+              <AdminNewTemplateForm />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'manage' && (
+        <div className="space-y-4 animate-in fade-in duration-300">
+          <div className="flex items-end justify-between">
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Historie a Plánované zápasy</h3>
+          </div>
+          <AdminMatchesTable matches={matches} users={users} whatsappLink={whatsappLink} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminUsersTable({ users, currentUser }: { users: User[], currentUser?: User }) {
   const [isPending, startTransition] = useTransition();
   const [currentPage, setCurrentPage] = useState(1);
@@ -140,7 +193,6 @@ export function AdminUsersTable({ users, currentUser }: { users: User[], current
               <th className="px-4 py-3 font-medium">Hráč</th>
               <th className="px-4 py-3 font-medium text-center">Post</th>
               <th className="px-4 py-3 font-medium text-center">Předplatitel</th>
-              <th className="px-4 py-3 font-medium text-center">Platba</th>
               {isMainAdmin && <th className="px-4 py-3 font-medium text-center">Práva Admina</th>}
               <th className="px-4 py-3 font-medium text-center">Akce</th>
             </tr>
@@ -183,20 +235,7 @@ export function AdminUsersTable({ users, currentUser }: { users: User[], current
                     <Star size={16} fill={user.isSubscriber ? "currentColor" : "none"} />
                   </button>
                 </td>
-                <td className="px-4 py-3 text-center">
-                  <button
-                    disabled={isPending}
-                    onClick={() => handleToggle(user.uid, 'hasPaid')}
-                    className={cn(
-                      "p-1.5 rounded-lg border transition-all inline-flex",
-                      user.hasPaid 
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" 
-                        : "bg-red-500/10 border-red-500/30 text-red-500"
-                    )}
-                  >
-                    <DollarSign size={16} />
-                  </button>
-                </td>
+
                 {isMainAdmin && (
                   <td className="px-4 py-3 text-center">
                     <button
@@ -316,6 +355,7 @@ export function AdminNewsForm() {
 export function AdminSettingsForm({ defaultSettings }: { defaultSettings: any }) {
   const [isPending, startTransition] = useTransition();
   const [qrBase64, setQrBase64] = useState(defaultSettings?.qrCodeUrl || '');
+  const [showToast, setShowToast] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -356,11 +396,20 @@ export function AdminSettingsForm({ defaultSettings }: { defaultSettings: any })
         const sFee = parseInt(formData.get('seasonFee') as string);
         const mFee = parseInt(formData.get('matchFee') as string);
         startTransition(() => {
-          updateSettings(link, qrBase64, bankAcc, sFee, mFee);
+          updateSettings(link, qrBase64, bankAcc, sFee, mFee).then(() => {
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 3000);
+          });
         });
       }}
-      className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 space-y-4 shadow-xl"
+      className="bg-zinc-900 border border-zinc-800 rounded-3xl p-5 space-y-4 shadow-xl relative overflow-hidden"
     >
+      
+      {showToast && (
+        <div className="absolute top-0 left-0 w-full bg-emerald-500 text-zinc-950 font-bold text-center text-sm py-2 animate-in slide-in-from-top-full fade-in z-10 shadow-lg">
+          Nastavení úspěšně uloženo!
+        </div>
+      )}
       <div>
         <label className="text-xs text-zinc-500 ml-1 mb-1 block">Odkaz / Pozvánka do WhatsApp skupiny</label>
         <input 
@@ -780,17 +829,18 @@ export function AdminCustomMatchForm({ whatsappLink }: { whatsappLink?: string }
     <form 
       action={(formData) => {
         const title = formData.get('title') as string;
-        const date = formData.get('date') as string;
-        const time = formData.get('time') as string;
-        const deadlineDate = formData.get('deadlineDate') as string;
-        const deadlineTime = formData.get('deadlineTime') as string;
+        const dateL = formData.get('date') as string;
+        const timeL = formData.get('time') as string;
+        const dlDateL = formData.get('deadlineDate') as string;
+        const dlTimeL = formData.get('deadlineTime') as string;
         const capacity = parseInt(formData.get('capacity') as string);
-        if (date && time && capacity && title && deadlineDate && deadlineTime) {
-          const dt = new Date(`${date}T${time}`);
-          const ddt = new Date(`${deadlineDate}T${deadlineTime}`);
+        const durationMinutes = parseInt(formData.get('durationMinutes') as string);
+        if (title && capacity && dateL && timeL && dlDateL && dlTimeL && durationMinutes) {
+          const dateIso = new Date(`${dateL}T${timeL}:00`).toISOString();
+          const deadlineIso = new Date(`${dlDateL}T${dlTimeL}:00`).toISOString();
           startTransition(() => {
-            createCustomMatch(dt.toISOString(), capacity, title, ddt.toISOString()).then((match) => {
-              setShareMatch(match);
+            createCustomMatch(dateIso, capacity, title, deadlineIso, durationMinutes).then(m => {
+              setShareMatch(m);
             });
           });
         }
@@ -824,9 +874,15 @@ export function AdminCustomMatchForm({ whatsappLink }: { whatsappLink?: string }
             <input type="time" name="deadlineTime" defaultValue="12:00" required className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
         </div>
-        <div>
-          <label className="text-xs text-zinc-500 ml-1 mb-1 block">Kapacita</label>
-          <input type="number" name="capacity" min="1" defaultValue="14" placeholder="Kapacita" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-zinc-500 ml-1 mb-1 block">Kapacita</label>
+            <input type="number" name="capacity" min="1" defaultValue="14" placeholder="Kapacita" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+          </div>
+          <div>
+            <label className="text-xs text-zinc-500 ml-1 mb-1 block">Délka trvání (minuty)</label>
+            <input type="number" name="durationMinutes" min="1" defaultValue="90" placeholder="Minuty" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+          </div>
         </div>
       </div>
 
@@ -857,9 +913,10 @@ export function AdminNewTemplateForm() {
         const deadlineDaysBefore = parseInt(formData.get('deadlineDaysBefore') as string);
         const deadlineTime = formData.get('deadlineTime') as string;
         const capacity = parseInt(formData.get('capacity') as string);
-        if (title && !isNaN(dayOfWeek) && time && capacity && !isNaN(deadlineDaysBefore) && deadlineTime) {
+        const durationMinutes = parseInt(formData.get('durationMinutes') as string);
+        if (title && !isNaN(dayOfWeek) && time && capacity && !isNaN(deadlineDaysBefore) && deadlineTime && durationMinutes) {
           startTransition(() => {
-            addMatchTemplate(title, dayOfWeek, time, capacity, deadlineDaysBefore, deadlineTime);
+            addMatchTemplate(title, dayOfWeek, time, capacity, deadlineDaysBefore, deadlineTime, durationMinutes);
           });
         }
       }}
@@ -900,9 +957,15 @@ export function AdminNewTemplateForm() {
             <input type="time" name="deadlineTime" defaultValue="12:00" required className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
           </div>
         </div>
-        <div>
-          <label className="text-xs text-zinc-500 ml-1 mb-1 block">Kapacita šablony</label>
-          <input type="number" name="capacity" min="1" defaultValue="14" placeholder="Kapacita" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs text-zinc-500 ml-1 mb-1 block">Kapacita šablony</label>
+            <input type="number" name="capacity" min="1" defaultValue="14" placeholder="Kapacita" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+          </div>
+          <div>
+            <label className="text-xs text-zinc-500 ml-1 mb-1 block">Délka trvání (minuty)</label>
+            <input type="number" name="durationMinutes" min="1" defaultValue="90" placeholder="Minuty" required className="w-full bg-zinc-950 border border-zinc-800 text-sm text-zinc-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50" />
+          </div>
         </div>
       </div>
 
@@ -913,24 +976,36 @@ export function AdminNewTemplateForm() {
   );
 }
 
-export function AdminFinanceBox({ users }: { users: User[] }) {
+export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsappLink?: string }) {
   const [isPending, startTransition] = useTransition();
-  const [copyStatus, setCopyStatus] = useState('');
+  const [shareMessage, setShareMessage] = useState<{title: string, textBody: string} | null>(null);
 
   const subscribers = users.filter(u => u.isSubscriber);
   const debtors = users.filter(u => (u.debt || 0) > 0);
 
-  const copyDebts = () => {
-    const text = `Čau, visí tu nějaké nedoplatky za zápasy:\n` + 
-                 debtors.map(d => `- ${d.name}: ${d.debt} Kč`).join('\n') +
-                 `\nProsím zkoukněte apku a uhraďte to. Díky!`;
-    navigator.clipboard.writeText(text);
-    setCopyStatus('Zkopírováno!');
-    
-    // Attempt redirect
-    window.open(`whatsapp://send?text=${encodeURIComponent(text)}`, '_blank');
+  const allDebtors = users.filter(u => (u.isSubscriber && !u.hasPaid) || ((u.debt || 0) > 0));
 
-    setTimeout(() => setCopyStatus(''), 2000);
+  const openDebtsMessage = () => {
+    if (allDebtors.length === 0) {
+      alert('Aktuálně nikdo nedluží.');
+      return;
+    }
+    
+    const lines = allDebtors.map(u => {
+      const owesSeason = u.isSubscriber && !u.hasPaid;
+      const owesMatch = (u.debt || 0) > 0;
+      if (owesSeason && owesMatch) return `- ${u.name}: Sezóna + Sekera (${u.debt} Kč)`;
+      if (owesSeason) return `- ${u.name}: Předplatné na sezónu`;
+      if (owesMatch) return `- ${u.name}: Sekera za zápasy (${u.debt} Kč)`;
+      return '';
+    }).filter(Boolean);
+
+    const baseUrl = 'https://fb.erikhack.com';
+    const text = `Čau pardi, visí nám tu nějaké nedoplatky v klubové kase:\n\n` + 
+                 lines.join('\n') +
+                 `\n\nProsím mrkněte do apky na detaily a případně rovnou naskenujte QR platbu. Díky!\n${baseUrl}/qr`;
+                 
+    setShareMessage({ title: 'Upomenout přes WhatsApp', textBody: text });
   };
 
   return (
@@ -949,6 +1024,34 @@ export function AdminFinanceBox({ users }: { users: User[] }) {
           >
             Nová Sezóna (Hromadný Reset)
           </button>
+          
+          <button 
+            disabled={isPending}
+            onClick={() => {
+              if (allDebtors.length === 0) {
+                 alert('Aktuálně nikdo z hráčů nedluží.');
+                 return;
+              }
+              if (window.confirm('Opravdu rozeslat upomínky e-mailem těmto dlužníkům?\n' + allDebtors.map(o => o.name).join(', '))) {
+                 startTransition(() => {
+                   sendDebtReminderEmail()
+                     .then(() => alert('Zprávy úspěšně odeslány.'))
+                     .catch(err => alert('Chyba při odesílání: ' + err.message));
+                 });
+              }
+            }}
+            className="ml-2 text-xs font-semibold bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg transition-colors border border-blue-500/20 inline-flex items-center gap-1"
+          >
+            <Mail size={14} /> E-mail všem dlužníkům
+          </button>
+
+          <button 
+            disabled={isPending}
+            onClick={openDebtsMessage}
+            className="ml-2 text-xs font-semibold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20 inline-flex items-center gap-1"
+          >
+            <Send size={14} /> WhatsApp dlužníkům
+          </button>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
           <table className="w-full text-sm text-left">
@@ -965,18 +1068,39 @@ export function AdminFinanceBox({ users }: { users: User[] }) {
                   <td className="px-4 py-3 font-semibold text-zinc-200">{u.name}</td>
                   <td className="px-4 py-3 text-center text-zinc-500 text-xs">{u.email}</td>
                   <td className="px-4 py-3 text-center">
-                    <button
-                      disabled={isPending}
-                      onClick={() => startTransition(() => toggleUserStatus(u.uid, 'hasPaid'))}
-                      className={cn(
-                        "px-3 py-1 text-xs font-bold rounded-lg border transition-all inline-flex",
-                        u.hasPaid 
-                          ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" 
-                          : "bg-red-500/10 border-red-500/30 text-red-500"
-                      )}
-                    >
-                      {u.hasPaid ? 'Uhrazeno' : 'Dluží Sezónu'}
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        title="Poslat zprávu e-mailem"
+                        disabled={isPending || u.hasPaid}
+                        onClick={() => {
+                           if (window.confirm(`Opravdu chceš hráče ${u.name} upomenout mailem?`)) {
+                              startTransition(() => { 
+                                sendDebtReminderEmail(u.uid)
+                                  .then(()=>alert('Dopis odeslán.'))
+                                  .catch(err => alert('Chyba: ' + err.message));
+                              });
+                           }
+                        }}
+                        className="p-1.5 rounded-lg transition-all border border-transparent hover:border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-20"
+                      >
+                         <Mail size={16} />
+                      </button>
+                      <span className={cn("font-bold text-xs uppercase ml-1 mr-1", u.hasPaid ? "text-emerald-500" : "text-red-500")}>
+                        {u.hasPaid ? 'Uhrazeno' : 'Dluží Sezónu'}
+                      </span>
+                      <button
+                        disabled={isPending}
+                        onClick={() => startTransition(() => toggleUserStatus(u.uid, 'hasPaid'))}
+                        className={cn(
+                          "px-3 py-1 text-xs font-bold rounded-lg transition-all",
+                          u.hasPaid 
+                            ? "bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700" 
+                            : "bg-emerald-500 text-white hover:bg-emerald-600"
+                        )}
+                      >
+                        {u.hasPaid ? 'Zrušit' : 'Zaplatil'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -988,14 +1112,6 @@ export function AdminFinanceBox({ users }: { users: User[] }) {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Sekera za zápasy ({debtors.length})</h3>
-          {debtors.length > 0 && (
-            <button 
-              onClick={copyDebts}
-              className="text-xs font-semibold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20 flex items-center gap-1"
-            >
-              <Send size={14} /> {copyStatus || 'Zkopírovat a přesměrovat'}
-            </button>
-          )}
         </div>
         
         {debtors.length === 0 ? (
@@ -1017,8 +1133,26 @@ export function AdminFinanceBox({ users }: { users: User[] }) {
                   <tr key={u.uid} className="hover:bg-zinc-800/50 transition-colors">
                     <td className="px-4 py-3 font-semibold text-zinc-200">{u.name}</td>
                     <td className="px-4 py-3 text-center font-mono font-bold text-red-500">{u.debt} Kč</td>
-                    <td className="px-4 py-3 text-center flex justify-center">
-                      <AdminDebtUrovnatForm uid={u.uid} currentDebt={u.debt || 0} />
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          title="Poslat zprávu e-mailem"
+                          disabled={isPending}
+                          onClick={() => {
+                             if (window.confirm(`Opravdu chceš hráče ${u.name} upomenout mailem (Sekera: ${u.debt} Kč)?`)) {
+                                startTransition(() => { 
+                                  sendDebtReminderEmail(u.uid)
+                                    .then(()=>alert('Dopis odeslán.'))
+                                    .catch(err => alert('Chyba: ' + err.message));
+                                });
+                             }
+                          }}
+                          className="mr-2 p-1.5 rounded-lg transition-all border border-transparent hover:border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-20"
+                        >
+                           <Mail size={16} />
+                        </button>
+                        <AdminDebtUrovnatForm uid={u.uid} currentDebt={u.debt || 0} />
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1027,6 +1161,15 @@ export function AdminFinanceBox({ users }: { users: User[] }) {
           </div>
         )}
       </section>
+
+      {shareMessage && (
+        <WhatsAppShareModal 
+          customModalTitle={shareMessage.title}
+          customTextBody={shareMessage.textBody}
+          whatsappLink={whatsappLink}
+          onClose={() => setShareMessage(null)}
+        />
+      )}
     </div>
   );
 }
@@ -1143,7 +1286,7 @@ export function WhatsAppShareModal({ matchInfo, whatsappLink, onClose, customTex
   if (!customTextBody && matchInfo) {
     const dateStr = new Date(matchInfo.date).toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
     const timeStr = new Date(matchInfo.date).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-    textBody = `🏑 Nový ${matchInfo.title.toLowerCase()}\n📅 ${dateStr} v ${timeStr}\n\nHlašte se v apce: ${window.location.origin}`;
+    textBody = `🏑 Nový ${matchInfo.title.toLowerCase()}\n📅 ${dateStr} v ${timeStr}\n\nHlašte se v apce: https://fb.erikhack.com`;
   }
 
   const [copied, setCopied] = useState(false);
@@ -1227,7 +1370,10 @@ export function AdminEmails({ currentUser }: { currentUser: User }) {
     { id: 'new-match', name: 'Nová událost (Zápas)', desc: 'Hromadná pozvánka, kterou lze nechat poslat okamžitě po vypsání termínu.' },
     { id: 'freed-player', name: 'Volné místo: Hráč v poli', desc: 'Hromadné avízo náhradníkům, že se nečekaně uvolnilo místo v poli.' },
     { id: 'freed-goalie', name: 'Volné místo: Gólman', desc: 'Hromadné avízo brankářům, že vypadl gólman ze sestavy.' },
-    { id: 'password-reset', name: 'Zapomenuté heslo', desc: 'E-mail s unikátním jednorázovým odkazem na reset hesla.' }
+    { id: 'password-reset', name: 'Zapomenuté heslo', desc: 'E-mail s unikátním jednorázovým odkazem na reset hesla.' },
+    { id: 'reminder-sub', name: 'Upomínka: Jen předplatné', desc: 'E-mail odeslaný dlužícímu předplatiteli s čistým kontem zápasů.' },
+    { id: 'reminder-match', name: 'Upomínka: Jen za zápasy', desc: 'E-mail odeslaný hráči co dluží na sekeře za odehrané zápasy.' },
+    { id: 'reminder-both', name: 'Upomínka: Za oboje (Předplatitel se sekerou)', desc: 'E-mail odeslaný stálému členovi, který dluží jak sezónu, tak i dodatečné zápasy.' }
   ];
   
   const testEmail = async (templateId: string) => {
@@ -1304,15 +1450,13 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
     const deadlineDays = formData.get('deadlineDaysBefore') as string;
     const deadlineTime = formData.get('deadlineTime') as string;
     const capacityStr = formData.get('capacity') as string;
+    const durationStr = formData.get('durationMinutes') as string;
     const titleStr = formData.get('title') as string;
 
-    const [hours, minutes] = timeLocal.split(':').map(Number);
-    const [dlHours, dlMinutes] = deadlineTime.split(':').map(Number);
-    const dateObj = new Date(dateLocal);
-    dateObj.setHours(hours, minutes, 0, 0);
-
+    const dateObj = new Date(`${dateLocal}T${timeLocal}:00`);
     const matchDateIso = dateObj.toISOString();
 
+    const [dlHours, dlMinutes] = deadlineTime.split(':').map(Number);
     const dlDateObj = new Date(dateObj.getTime());
     dlDateObj.setDate(dlDateObj.getDate() - Number(deadlineDays));
     dlDateObj.setHours(dlHours, dlMinutes, 0, 0);
@@ -1320,7 +1464,7 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
 
     startTransition(() => {
       import('@/app/actions/admin').then((m) => {
-        m.editMatch(match.id, titleStr || match.title || '', matchDateIso, Number(capacityStr || match.capacity), deadlineIso).then(() => {
+        m.editMatch(match.id, titleStr || match.title || '', matchDateIso, Number(capacityStr || match.capacity), deadlineIso, Number(durationStr || match.durationMinutes || 90)).then(() => {
           onClose();
         });
       });
@@ -1374,9 +1518,15 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
               </div>
            </div>
 
-           <div>
-              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Max. kapacita hráčů v poli</label>
-              <input name="capacity" defaultValue={match.capacity} type="number" min="1" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+           <div className="flex gap-3">
+             <div className="flex-1">
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Max. kapacita v poli</label>
+                <input name="capacity" defaultValue={match.capacity} type="number" min="1" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+             </div>
+             <div className="flex-1">
+                <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Délka trvání (minuty)</label>
+                <input name="durationMinutes" defaultValue={match.durationMinutes || 90} type="number" min="1" className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
+             </div>
            </div>
 
            <div>

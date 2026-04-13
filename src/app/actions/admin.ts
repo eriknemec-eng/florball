@@ -82,7 +82,7 @@ export async function addNews(title: string, content: string, isPinned: boolean 
   revalidatePath('/admin');
 }
 
-export async function createCustomMatch(dateIso: string, capacity: number, title: string, deadlineIso: string) {
+export async function createCustomMatch(dateIso: string, capacity: number, title: string, deadlineIso: string, durationMinutes: number = 90) {
   await checkAdmin();
   const db = await getDb();
   
@@ -94,6 +94,7 @@ export async function createCustomMatch(dateIso: string, capacity: number, title
     deadline: deadlineIso,
     lockPhase: 'phase1_open' as const,
     capacity,
+    durationMinutes,
     responses: []
   };
   db.matches.push(newMatch);
@@ -105,7 +106,7 @@ export async function createCustomMatch(dateIso: string, capacity: number, title
   return { id: newMatch.id, title: newMatch.title, date: newMatch.date };
 }
 
-export async function addMatchTemplate(title: string, dayOfWeek: number, time: string, capacity: number, deadlineDaysBefore: number, deadlineTime: string) {
+export async function addMatchTemplate(title: string, dayOfWeek: number, time: string, capacity: number, deadlineDaysBefore: number, deadlineTime: string, durationMinutes: number = 90) {
   await checkAdmin();
   const db = await getDb();
   
@@ -116,7 +117,8 @@ export async function addMatchTemplate(title: string, dayOfWeek: number, time: s
     time,
     deadlineDaysBefore,
     deadlineTime,
-    capacity
+    capacity,
+    durationMinutes
   });
   
   await saveDb(db);
@@ -173,6 +175,7 @@ export async function createMatchFromTemplate(templateId: string) {
     deadline: deadlineDate.toISOString(),
     lockPhase: 'phase1_open' as const,
     capacity: template.capacity,
+    durationMinutes: template.durationMinutes || 90,
     responses: []
   };
 
@@ -194,7 +197,7 @@ export async function deleteMatch(matchId: string) {
   revalidatePath('/admin');
 }
 
-export async function editMatch(matchId: string, title: string, dateIso: string, capacity: number, deadlineIso: string) {
+export async function editMatch(matchId: string, title: string, dateIso: string, capacity: number, deadlineIso: string, durationMinutes: number = 90) {
   await checkAdmin();
   const db = await getDb();
   const match = db.matches.find(m => m.id === matchId);
@@ -203,6 +206,7 @@ export async function editMatch(matchId: string, title: string, dateIso: string,
     match.date = dateIso;
     match.capacity = Number(capacity);
     match.deadline = deadlineIso;
+    match.durationMinutes = durationMinutes;
     await saveDb(db);
     revalidatePath('/dashboard');
     revalidatePath('/admin');
@@ -340,7 +344,7 @@ export async function sendMatchInvitationEmail(matchId: string) {
 
   if (targetEmails.length === 0) return;
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+  const baseUrl = 'https://fb.erikhack.com';
   const matchDate = new Date(match.date);
   const dateStr = matchDate.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
   const timeStr = matchDate.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
@@ -350,4 +354,44 @@ export async function sendMatchInvitationEmail(matchId: string) {
      subject: `🏑 Vypsán nový florbal: ${match.title || 'Trénink'}`,
      html: `<h3>Nový termín otevřen!</h3><p>Právě byl vypsán nový florbalový zápas na <b>${dateStr} v ${timeStr}</b>.</p><p>Kdo dřív přijde, ten hraje.</p><br/><a href="${baseUrl}/dashboard" style="background:#10b981;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;font-weight:bold;">Přihlásit se na zápas</a>`
   });
+}
+
+export async function sendDebtReminderEmail(uid?: string) {
+  await checkAdmin();
+  const db = await getDb();
+  
+  let targetUsers = uid ? [db.users.find(u => u.uid === uid)].filter(Boolean) : db.users.filter(u => (u.isSubscriber && !u.hasPaid) || ((u.debt || 0) > 0));
+  
+  if (targetUsers.length === 0) return;
+
+  const baseUrl = 'https://fb.erikhack.com';
+  const qrCodeUrl = db.settings?.qrCodeUrl || '';
+  const bankAcc = db.settings?.qrBankAccount || '';
+
+  for (const u of targetUsers as any[]) {
+    if (!u.email) continue;
+    let debtText = '';
+    const isSeasonOwed = u.isSubscriber && !u.hasPaid;
+    const matchDebt = u.debt && u.debt > 0 ? u.debt : 0;
+    const seasonFee = db.settings?.seasonFee || 500;
+    
+    if (isSeasonOwed && matchDebt > 0) {
+       debtText = `dlužíš předplatné na aktuální sezónu (${seasonFee} Kč) a k tomu ti visí drobná sekera za jednorázové zápasy ve výši ${matchDebt} Kč.`;
+    } else if (isSeasonOwed) {
+       debtText = `všimli jsme si, že ještě nemáš zaplacené předplatné na aktuální sezónu (${seasonFee} Kč).`;
+    } else if (matchDebt > 0) {
+       debtText = `taháš s sebou drobnou sekeru za odehrané zápasy ve výši ${matchDebt} Kč.`;
+    } else {
+       continue;
+    }
+
+    const htmlUrl = qrCodeUrl ? `<p>QR kód pro rychlou platbu najdeš přímo v aplikaci.</p><p><a href="${baseUrl}/qr" style="background:#ef4444;color:white;padding:10px 16px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">Zobrazit platbu v aplikaci</a></p>` : `<p><a href="${baseUrl}/dashboard" style="background:#eab308;color:black;padding:10px 16px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">Přejít do aplikace</a></p>`;
+    const htmlBank = bankAcc ? `<p>Nebo to pošli na účet: <b>${bankAcc}</b></p>` : '';
+
+    await sendEmail({
+      to: u.email,
+      subject: `⚠️ Upozornění na nezaplacené příspěvky - Florbal`,
+      html: `<p>Ahoj ${u.name},</p><p>prosím tě, ${debtText}</p><p>Zkus to prosím v dohledné době dorovnat, ať máme klubovou kasu v pořádku.</p><p>Pokud už jsi platil hotově, nebo jsi to mezitím rovnou poslal, ignoruj tuto zprávu a dej nám osobně na florbale vědět, ať to v systému jen odškrtneme.</p>${htmlUrl}${htmlBank}<br/><p>Díky moc,<br/>Tým Florbal</p>`
+    });
+  }
 }

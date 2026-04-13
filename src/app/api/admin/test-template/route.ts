@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
     }
 
-    const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+    const baseUrl = 'https://fb.erikhack.com';
 
     if (templateId === 'ping') {
         await sendEmail({
@@ -55,6 +55,29 @@ export async function POST(req: Request) {
             to: targetEmail,
             subject: 'Obnova zapomenutého hesla',
             html: `<h3>Obnova hesla na tvůj účet</h3><p>Požádal jsi (nebo se pokoušíme simulovat žádost) o obnovu hesla.</p><p><a href="${baseUrl}/reset-password?token=DEMO_TESTOVACI_TOKEN" style="background:#3b82f6;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">Zadej nové heslo</a></p><p>Link by normálně platil 1 hodinu.</p>`
+        });
+    } else if (templateId === 'reminder-sub') {
+        const seasonFee = db.settings?.seasonFee || 500;
+        const htmlUrl = `<p>QR kód pro rychlou platbu najdeš přímo v aplikaci.</p><p><a href="${baseUrl}/qr" style="background:#ef4444;color:white;padding:10px 16px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">Zobrazit platbu v aplikaci</a></p>`;
+        await sendEmail({
+            to: targetEmail,
+            subject: `⚠️ Upozornění na nezaplacené příspěvky - Florbal`,
+            html: `<p>Ahoj (Tvé Jméno),</p><p>prosím tě, všimli jsme si, že ještě nemáš zaplacené předplatné na aktuální sezónu (${seasonFee} Kč).</p><p>Zkus to prosím v dohledné době dorovnat, ať máme klubovou kasu v pořádku.</p><p>Pokud už jsi platil hotově, nebo jsi to mezitím rovnou poslal, ignoruj tuto zprávu a dej nám osobně na florbale vědět, ať to v systému jen odškrtneme.</p> ${htmlUrl} <br/><p>Díky moc,<br/>Tým Florbal</p>`
+        });
+    } else if (templateId === 'reminder-match') {
+        const htmlUrl = `<p>QR kód pro rychlou platbu najdeš přímo v aplikaci.</p><p><a href="${baseUrl}/qr" style="background:#ef4444;color:white;padding:10px 16px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">Zobrazit platbu v aplikaci</a></p>`;
+        await sendEmail({
+            to: targetEmail,
+            subject: `⚠️ Upozornění na nezaplacené příspěvky - Florbal`,
+            html: `<p>Ahoj (Tvé Jméno),</p><p>prosím tě, taháš s sebou drobnou sekeru za odehrané zápasy ve výši 100 Kč.</p><p>Zkus to prosím v dohledné době dorovnat, ať máme klubovou kasu v pořádku.</p><p>Pokud už jsi platil hotově, nebo jsi to mezitím rovnou poslal, ignoruj tuto zprávu a dej nám osobně na florbale vědět, ať to v systému jen odškrtneme.</p> ${htmlUrl} <br/><p>Díky moc,<br/>Tým Florbal</p>`
+        });
+    } else if (templateId === 'reminder-both') {
+        const seasonFee = db.settings?.seasonFee || 500;
+        const htmlUrl = `<p>QR kód pro rychlou platbu najdeš přímo v aplikaci.</p><p><a href="${baseUrl}/qr" style="background:#ef4444;color:white;padding:10px 16px;text-decoration:none;border-radius:6px;display:inline-block;font-weight:bold;">Zobrazit platbu v aplikaci</a></p>`;
+        await sendEmail({
+            to: targetEmail,
+            subject: `⚠️ Upozornění na nezaplacené příspěvky - Florbal`,
+            html: `<p>Ahoj (Tvé Jméno),</p><p>prosím tě, dlužíš předplatné na aktuální sezónu (${seasonFee} Kč) a k tomu ti visí drobná sekera za jednorázové zápasy ve výši 100 Kč.</p><p>Zkus to prosím v dohledné době dorovnat, ať máme klubovou kasu v pořádku.</p><p>Pokud už jsi platil hotově, nebo jsi to mezitím rovnou poslal, ignoruj tuto zprávu a dej nám osobně na florbale vědět, ať to v systému jen odškrtneme.</p> ${htmlUrl} <br/><p>Díky moc,<br/>Tým Florbal</p>`
         });
     } else {
         return NextResponse.json({ error: 'Neznámá šablona' }, { status: 400 });
