@@ -1011,49 +1011,52 @@ export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsa
   return (
     <div className="space-y-8">
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Měšec předplatitelů ({subscribers.length})</h3>
-          <button 
-            disabled={isPending}
-            onClick={() => {
-              if (window.confirm('Opravdu plošně resetovat předplatné všem stálým členům? Všem se objeví upozornění o dluhu.')) {
-                startTransition(() => { resetSubscribers() });
-              }
-            }}
-            className="text-xs font-semibold bg-red-500/10 text-red-500 hover:bg-red-500/20 px-3 py-1.5 rounded-lg transition-colors border border-red-500/20"
-          >
-            Nová Sezóna (Hromadný Reset)
-          </button>
           
-          <button 
-            disabled={isPending}
-            onClick={() => {
-              if (allDebtors.length === 0) {
-                 alert('Aktuálně nikdo z hráčů nedluží.');
-                 return;
-              }
-              if (window.confirm('Opravdu rozeslat upomínky e-mailem těmto dlužníkům?\n' + allDebtors.map(o => o.name).join(', '))) {
-                 startTransition(() => {
-                   sendDebtReminderEmail()
-                     .then(() => alert('Zprávy úspěšně odeslány.'))
-                     .catch(err => alert('Chyba při odesílání: ' + err.message));
-                 });
-              }
-            }}
-            className="ml-2 text-xs font-semibold bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg transition-colors border border-blue-500/20 inline-flex items-center gap-1"
-          >
-            <Mail size={14} /> E-mail všem dlužníkům
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button 
+              disabled={isPending}
+              onClick={() => {
+                if (window.confirm('Opravdu plošně resetovat předplatné všem stálým členům? Všem se objeví upozornění o dluhu.')) {
+                  startTransition(() => { resetSubscribers() });
+                }
+              }}
+              className="text-xs font-semibold bg-red-500/10 text-red-500 hover:bg-red-500/20 px-3 py-1.5 rounded-lg transition-colors border border-red-500/20"
+            >
+              Nová Sezóna (Reset)
+            </button>
+            
+            <button 
+              disabled={isPending}
+              onClick={() => {
+                if (allDebtors.length === 0) {
+                   alert('Aktuálně nikdo z hráčů nedluží.');
+                   return;
+                }
+                if (window.confirm('Opravdu rozeslat upomínky e-mailem těmto dlužníkům?\n' + allDebtors.map(o => o.name).join(', '))) {
+                   startTransition(() => {
+                     import('@/app/actions/admin').then((m) => {
+                       m.sendDebtReminderEmail().then(() => alert('Zprávy úspěšně odeslány.')).catch(err => alert('Chyba: ' + err.message));
+                     });
+                   });
+                }
+              }}
+              className="text-xs font-semibold bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 px-3 py-1.5 rounded-lg transition-colors border border-blue-500/20 inline-flex items-center gap-1"
+            >
+              <Mail size={14} /> E-mail všem
+            </button>
 
-          <button 
-            disabled={isPending}
-            onClick={openDebtsMessage}
-            className="ml-2 text-xs font-semibold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20 inline-flex items-center gap-1"
-          >
-            <Send size={14} /> WhatsApp dlužníkům
-          </button>
+            <button 
+              disabled={isPending}
+              onClick={openDebtsMessage}
+              className="text-xs font-semibold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20 inline-flex items-center gap-1"
+            >
+              <Send size={14} /> WhatsApp všem
+            </button>
+          </div>
         </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-x-auto shadow-xl">
           <table className="w-full text-sm text-left">
             <thead className="bg-zinc-950/50 text-zinc-500 border-b border-zinc-800 text-xs uppercase">
               <tr>
@@ -1110,7 +1113,7 @@ export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsa
       </section>
 
       <section>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Sekera za zápasy ({debtors.length})</h3>
         </div>
         
@@ -1119,7 +1122,7 @@ export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsa
             Nikdo nic nedluží. Všichni jednorázoví hráči jsou srovnaní.
           </div>
         ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-xl">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-x-auto shadow-xl">
             <table className="w-full text-sm text-left">
               <thead className="bg-zinc-950/50 text-zinc-500 border-b border-zinc-800 text-xs uppercase">
                 <tr>
@@ -1208,16 +1211,41 @@ function AdminDebtUrovnatForm({ uid, currentDebt }: { uid: string, currentDebt: 
 
 export function EvaluateMatchModal({ match, users, onClose }: { match: Match, users: User[], onClose: () => void }) {
   const [isPending, startTransition] = useTransition();
-  const respondents = match.responses.filter(r => ['going_player', 'going_goalie', 'playing_player', 'playing_goalie'].includes(r.status));
-  // Výchozí stav: nikdo nemá "odškrtnuto" že zaplatil (všichni jsou bráni jako dlužníci, dokud se neoznačí)
+  const [hideSubscribers, setHideSubscribers] = useState(false);
   const [checkedPaidUids, setCheckedPaidUids] = useState<string[]>([]);
+
+  // Stejná logika jako v MatchCard pro případ, že zápas nebyl formálně uzamčen přes Fázi 2
+  const sortStrategy = (a: any, b: any) => {
+    const isGuestA = a.uid?.startsWith('guest_');
+    const isGuestB = b.uid?.startsWith('guest_');
+    const uA = users.find(u => u.uid === a.uid);
+    const uB = users.find(u => u.uid === b.uid);
+    const subA = (uA?.isSubscriber || isGuestA) ? 1 : 0;
+    const subB = (uB?.isSubscriber || isGuestB) ? 1 : 0;
+    if (subA !== subB) return subB - subA; 
+    return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(); 
+  };
+
+  const players = match.responses.filter(r => r.status === 'going_player' || r.status === 'playing_player').sort(sortStrategy).slice(0, 12);
+  const goalies = match.responses.filter(r => r.status === 'going_goalie' || r.status === 'playing_goalie').sort(sortStrategy).slice(0, 2);
+
+  const deadlineMs = new Date(match.deadline).getTime();
+  const lateCancellations = match.responses.filter(r => r.status === 'not_going' && new Date(r.timestamp).getTime() > deadlineMs);
+
+  let respondents = [...goalies, ...players, ...lateCancellations];
+  if (hideSubscribers) {
+    respondents = respondents.filter(r => !users.find(u => u.uid === r.uid)?.isSubscriber);
+  }
 
   const toggleCheck = (uid: string) => {
     setCheckedPaidUids(prev => prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]);
   };
 
   const submitEvaluation = () => {
-    const uidsWithDebt = respondents.map(r => r.uid).filter(uid => !checkedPaidUids.includes(uid));
+    // We check all respondents that belong to the confirmed cut (even if hidden from UI, they shouldn't suddenly become debtors if they are subscribers)
+    // Actually, subscribers are protected anyway, but let's evaluate them safely.
+    const fullRespondentsList = [...goalies, ...players];
+    const uidsWithDebt = fullRespondentsList.map(r => r.uid).filter(uid => !checkedPaidUids.includes(uid) && !uid?.startsWith('guest_'));
     
     if (window.confirm('Všem NEZAŠKRTNUTÝM hráčům (bez předplatného) se připíše nový dluh k úhradě. Souhlasí to?')) {
       startTransition(() => {
@@ -1242,24 +1270,36 @@ export function EvaluateMatchModal({ match, users, onClose }: { match: Match, us
             <p className="mb-2"><b className="text-amber-500">Co s tím?</b> Zaškrtni ty hráče, kteří <b>zaplatili hotově na místě</b> (nebo už víš, že to poslali).</p>
             <p>Všichni <b className="text-white">nezaškrtnutí</b> (kromě majitelů předplatného) si automaticky vyslouží dluh v sekci Finance & Dlužníci.</p>
           </div>
+          <div className="flex justify-between items-center bg-zinc-950 px-4 py-2 rounded-xl border border-zinc-800">
+            <span className="text-sm font-semibold text-zinc-400">Předplatitelé zaplatili dopředu</span>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <span className="text-xs text-zinc-500">Skrýt předplatitele z listu</span>
+              <input type="checkbox" checked={hideSubscribers} onChange={e => setHideSubscribers(e.target.checked)} className="w-4 h-4 rounded border-zinc-700 bg-zinc-900 text-emerald-500 focus:ring-emerald-500" />
+            </label>
+          </div>
           <div className="space-y-2">
             {respondents.length === 0 && <p className="text-zinc-600 text-sm">Na tento zápas se nikdo nepřihlásil.</p>}
             {respondents.map((r, idx) => {
               const u = users.find(user => user.uid === r.uid);
-              const displayName = u?.name || 'Neznámý hráč';
+              const isGuest = r.uid?.startsWith('guest_');
+              const displayName = u?.name || (isGuest ? r.uid.split('_').slice(2).join(' ') + ' (Host)' : 'Neznámý hráč');
               const isSub = u?.isSubscriber;
 
+              const isLateCancel = r.status === 'not_going';
+
               return (
-                <label key={r.uid} className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${isSub ? 'bg-zinc-900 border-zinc-800 opacity-70 cursor-not-allowed' : 'bg-zinc-950/50 border-zinc-800 cursor-pointer hover:bg-zinc-800/80'}`}>
-                  <span className="font-semibold text-zinc-200 flex items-center gap-2">
+                <label key={r.uid} className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${(isSub || isGuest) ? 'bg-zinc-900 border-zinc-800 opacity-70 cursor-not-allowed' : 'bg-zinc-950/50 border-zinc-800 cursor-pointer hover:bg-zinc-800/80'}`}>
+                  <span className={`font-semibold flex items-center gap-2 ${isLateCancel ? 'text-red-400' : 'text-zinc-200'} ${isGuest ? 'opacity-70' : ''}`}>
                     {idx + 1}. {displayName} 
                     {isSub && <span title="Předplatitel"><Star size={14} className="text-amber-500 fill-amber-500" /></span>}
+                    {isLateCancel && <span className="text-[10px] bg-red-500/10 text-red-500 px-1.5 py-0.5 rounded border border-red-500/20 uppercase">Odhlášen po uzávěrce</span>}
+                    {isGuest && <span className="text-[10px] bg-emerald-500/10 text-emerald-500 px-1.5 py-0.5 rounded border border-emerald-500/20">Zaplaceno na ruku</span>}
                   </span>
                   <input 
                     type="checkbox" 
-                    disabled={isSub}
-                    checked={isSub ? true : checkedPaidUids.includes(r.uid)} 
-                    onChange={() => !isSub && toggleCheck(r.uid)}
+                    disabled={isSub || isGuest}
+                    checked={(isSub || isGuest) ? true : checkedPaidUids.includes(r.uid)} 
+                    onChange={() => !(isSub || isGuest) && toggleCheck(r.uid)}
                     className="w-5 h-5 rounded border-zinc-700 bg-zinc-950 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-zinc-900 disabled:opacity-50" 
                   />
                 </label>

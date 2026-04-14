@@ -58,10 +58,12 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
 
   // Sorted arrays for Phase 1 simulation 
   const sortStrategy = (a: any, b: any) => {
+    const isGuestA = a.uid?.startsWith('guest_');
+    const isGuestB = b.uid?.startsWith('guest_');
     const uA = allUsers.find(u => u.uid === a.uid);
     const uB = allUsers.find(u => u.uid === b.uid);
-    const subA = uA?.isSubscriber ? 1 : 0;
-    const subB = uB?.isSubscriber ? 1 : 0;
+    const subA = (uA?.isSubscriber || isGuestA) ? 1 : 0;
+    const subB = (uB?.isSubscriber || isGuestB) ? 1 : 0;
     if (subA !== subB) return subB - subA;
     return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
   };
@@ -152,8 +154,8 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
             <div className="flex justify-between text-xs">
               <span className="text-zinc-400 font-medium tracking-wide uppercase">Hráči v poli</span>
               <div className="flex items-center gap-2">
-                {pCount < 12 && <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold animate-pulse">Je nás málo</span>}
-                <span className={cn("font-bold text-xs", pCount >= 12 ? "text-amber-500" : "text-emerald-500")}>
+                {pCount < 10 && <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold animate-pulse">Je nás málo</span>}
+                <span className={cn("font-bold text-xs", pCount < 10 ? "text-red-500" : pCount < 12 ? "text-amber-500" : "text-emerald-500")}>
                   {isPhase1 ? `${pCount} Přihlášeno (Limit 12)` : `${pCount} / 12`}
                 </span>
               </div>
@@ -162,7 +164,7 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
               <div 
                 className={cn(
                   "h-full rounded-full transition-all duration-1000 ease-out",
-                  pCount >= 12 ? "bg-amber-500" : (pCount < 12 ? "bg-red-500" : "bg-emerald-500")
+                  pCount < 10 ? "bg-red-500" : pCount < 12 ? "bg-amber-500" : "bg-emerald-500"
                 )}
                 style={{ width: `${Math.min((pCount / 12) * 100, 100)}%` }}
               />
@@ -174,8 +176,8 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
             <div className="flex justify-between text-xs">
               <span className="text-zinc-400 font-medium tracking-wide uppercase">Gólmani</span>
               <div className="flex items-center gap-2">
-                 {gCount < 2 && <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold animate-pulse">Je nás málo</span>}
-                 <span className={cn("font-bold text-xs", gCount >= 2 ? "text-amber-500" : "text-emerald-500")}>
+                 {gCount < 2 && <span className="text-red-500 bg-red-500/10 px-1.5 py-0.5 rounded text-[10px] uppercase font-bold animate-pulse">Chybí gólman!</span>}
+                 <span className={cn("font-bold text-xs", gCount < 2 ? "text-red-500" : "text-emerald-500")}>
                    {isPhase1 ? `${gCount} Přihlášeno (Limit 2)` : `${gCount} / 2`}
                  </span>
               </div>
@@ -184,7 +186,7 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
               <div 
                 className={cn(
                   "h-full rounded-full transition-all duration-1000 ease-out",
-                  gCount >= 2 ? "bg-amber-500" : (gCount < 2 ? "bg-red-500" : "bg-emerald-500")
+                  gCount < 2 ? "bg-red-500" : "bg-emerald-500"
                 )}
                 style={{ width: `${Math.min((gCount / 2) * 100, 100)}%` }}
               />
@@ -208,6 +210,58 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
              <strong>Rychlá záchrana!</strong> Uvolnila se místa po uzávěrce. Nyní funguje systém <em>„Kdo dřív přijde, ten hraje“</em>!
           </div>
         )}
+
+        {/* Osobní ukazatel stavu */}
+        {(() => {
+           let indicatorState: 'confirmed' | 'reserve' | null = null;
+           let reservePosition: number = 0;
+         
+           if (myStatus === 'playing_player' || myStatus === 'playing_goalie') {
+              indicatorState = 'confirmed';
+           } else if (myStatus === 'reserve_player') {
+              indicatorState = 'reserve';
+              reservePosition = reservePlayersP2.findIndex(r => r.uid === myResponse?.uid) + 1;
+           } else if (myStatus === 'reserve_goalie') {
+              indicatorState = 'reserve';
+              reservePosition = reserveGoaliesP2.findIndex(r => r.uid === myResponse?.uid) + 1;
+           } else if (myStatus === 'going_player') {
+              const idx = goingPlayersP1.findIndex(r => r.uid === myResponse?.uid);
+              if (idx !== -1 && idx < 12) {
+                  indicatorState = 'confirmed';
+              } else if (idx >= 12) {
+                  indicatorState = 'reserve';
+                  reservePosition = idx - 11;
+              }
+           } else if (myStatus === 'going_goalie') {
+              const idx = goingGoaliesP1.findIndex(r => r.uid === myResponse?.uid);
+              if (idx !== -1 && idx < 2) {
+                  indicatorState = 'confirmed';
+              } else if (idx >= 2) {
+                  indicatorState = 'reserve';
+                  reservePosition = idx - 1;
+              }
+           }
+
+           if (indicatorState === 'confirmed') {
+              return (
+                 <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs text-center p-2.5 rounded-xl mb-3 flex items-center justify-center gap-2">
+                    <Check size={16} className="fixed-stroke-[3]" />
+                    <strong>Máš garantované místo v sestavě!</strong>
+                 </div>
+              );
+           }
+           
+           if (indicatorState === 'reserve') {
+              return (
+                 <div className="bg-amber-500/10 border border-amber-500/30 text-amber-500 text-xs text-center p-2.5 rounded-xl mb-3 flex items-center justify-center gap-2 animate-pulse">
+                    <AlertCircle size={16} />
+                    <strong>Jsi pod čarou jako {reservePosition}. náhradník.</strong>
+                 </div>
+              );
+           }
+           
+           return null;
+        })()}
 
         {/* Tlačítka */}
         <div className="grid grid-cols-3 gap-2 pt-2">
@@ -298,6 +352,25 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
            <p className="text-xs text-amber-500/80 text-center px-2">Jsi zapsán pod čarou. Pokud se uvolní místo, tlačítko ožije zeleně pro všechny (Kdo dřív přijde).</p>
         )}
 
+        {currentUser.role === 'admin' && matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (
+          <div className="pt-2 border-t border-zinc-800/50 mt-2 text-center">
+            <button
+               onClick={() => {
+                 const name = window.prompt("Zadej jméno Hosta (např. Kamilův bratr):");
+                 if (!name) return;
+                 const isGoalie = window.confirm("Jde do BRÁNY? (OK = Brána, Zrušit = Pole)");
+                 startTransition(() => {
+                    import('@/app/actions/match').then(m => m.addGuestToMatch(match.id, name, isGoalie));
+                 });
+               }}
+               disabled={isPending}
+               className="text-[10px] sm:text-xs font-semibold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20"
+            >
+               + Přidat Hosta
+            </button>
+          </div>
+        )}
+
         {/* Tlačítko rozbalení seznamu hráčů */}
         <div className="pt-2 border-t border-zinc-800/50 mt-2">
            <button 
@@ -314,62 +387,83 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
                 {/* ---------- PLAYERS SECTION ---------- */}
                 <div>
                   <h4 className="text-xs font-bold text-emerald-500 mb-2 uppercase tracking-wider">
-                    Hráči v poli {isPhase1 ? `(Průběžně top 12)` : `(${playingPlayersP2.length}/12)`}
+                    Hráči v poli ({isPhase1 ? Math.min(goingPlayersP1.length, 12) : playingPlayersP2.length}/12)
                   </h4>
                   <div className="flex flex-wrap gap-1.5">
-                    {/* Render Phase 1 or 2 */}
-                    {(isPhase1 ? goingPlayersP1 : playingPlayersP2).map((r, idx) => {
+                    {(isPhase1 ? goingPlayersP1.slice(0, 12) : playingPlayersP2).map((r) => {
+                       const isGuest = r.uid?.startsWith('guest_');
                        const u = allUsers.find(u => u.uid === r.uid);
-                       const name = u?.name || r.uid;
-                       const inCut = isPhase1 ? idx < 12 : true; // In Phase 1 visually separate the cut
+                       const name = u?.name || (isGuest ? r.uid.split('_').slice(2).join(' ') + ' (Host)' : r.uid);
                        return (
-                         <span key={r.uid} className={cn(
-                           "text-xs px-2 py-1 rounded-md border",
-                           inCut ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                         )}>
+                         <span key={r.uid} className="text-xs px-2 py-1 rounded-md border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 inline-flex items-center gap-1">
                            {name} {u?.isSubscriber && '⭐'}
+                           {isGuest && currentUser.role === 'admin' && (
+                              <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.removeGuestFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400">
+                                <X size={12} strokeWidth={3} />
+                              </button>
+                           )}
                          </span>
                        )
                     })}
-                    {(isPhase1 ? goingPlayersP1 : playingPlayersP2).length === 0 && <span className="text-zinc-600 text-xs italic">Zatím nikdo.</span>}
+                    {(isPhase1 ? goingPlayersP1.slice(0, 12) : playingPlayersP2).length === 0 && <span className="text-zinc-600 text-xs italic">Zatím nikdo.</span>}
                   </div>
                 </div>
 
                 {/* ---------- GOALIES SECTION ---------- */}
                 <div>
                   <h4 className="text-xs font-bold text-emerald-500 mb-2 uppercase tracking-wider">
-                    Brankáři {isPhase1 ? `(Průběžně top 2)` : `(${playingGoaliesP2.length}/2)`}
+                    Brankáři ({isPhase1 ? Math.min(goingGoaliesP1.length, 2) : playingGoaliesP2.length}/2)
                   </h4>
                   <div className="flex flex-wrap gap-1.5">
-                    {(isPhase1 ? goingGoaliesP1 : playingGoaliesP2).map((r, idx) => {
+                    {(isPhase1 ? goingGoaliesP1.slice(0, 2) : playingGoaliesP2).map((r) => {
+                       const isGuest = r.uid?.startsWith('guest_');
                        const u = allUsers.find(u => u.uid === r.uid);
-                       const name = u?.name || r.uid;
-                       const inCut = isPhase1 ? idx < 2 : true;
+                       const name = u?.name || (isGuest ? r.uid.split('_').slice(2).join(' ') + ' (Host)' : r.uid);
                        return (
-                         <span key={r.uid} className={cn(
-                           "text-xs px-2 py-1 rounded-md border",
-                           inCut ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                         )}>
+                         <span key={r.uid} className="text-xs px-2 py-1 rounded-md border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 inline-flex items-center gap-1">
                            {name} {u?.isSubscriber && '⭐'}
+                           {isGuest && currentUser.role === 'admin' && (
+                              <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.removeGuestFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400">
+                                <X size={12} strokeWidth={3} />
+                              </button>
+                           )}
                          </span>
                        )
                     })}
-                    {(isPhase1 ? goingGoaliesP1 : playingGoaliesP2).length === 0 && <span className="text-zinc-600 text-xs italic">Zatím nikdo.</span>}
+                    {(isPhase1 ? goingGoaliesP1.slice(0, 2) : playingGoaliesP2).length === 0 && <span className="text-zinc-600 text-xs italic">Zatím nikdo.</span>}
                   </div>
                 </div>
 
-                {/* ---------- RESERVE SECTION (Tohle kreslíme napevno v P2) ---------- */}
-                {!isPhase1 && (reservePlayersP2.length > 0 || reserveGoaliesP2.length > 0) && (
+                {/* ---------- RESERVE SECTION ---------- */}
+                {((isPhase1 ? goingPlayersP1.slice(12) : reservePlayersP2).length > 0 || (isPhase1 ? goingGoaliesP1.slice(2) : reserveGoaliesP2).length > 0) && (
                   <div>
-                    <h4 className="text-xs font-bold text-amber-500 mb-2 uppercase tracking-wider">Pod čarou</h4>
+                    <h4 className="text-xs font-bold text-amber-500 mb-2 uppercase tracking-wider">Pod čarou (Náhradníci)</h4>
                     <div className="flex flex-wrap gap-1.5">
-                      {reservePlayersP2.map(r => {
-                         const name = allUsers.find(u => u.uid === r.uid)?.name || r.uid;
-                         return <span key={r.uid} className="bg-amber-500/10 text-amber-400 text-xs px-2 py-1 rounded-md border border-amber-500/20">{name} (Pole)</span>
+                      {(isPhase1 ? goingPlayersP1.slice(12) : reservePlayersP2).map(r => {
+                         const isGuest = r.uid?.startsWith('guest_');
+                         const u = allUsers.find(u => u.uid === r.uid);
+                         const name = u?.name || (isGuest ? r.uid.split('_').slice(2).join(' ') + ' (Host)' : r.uid);
+                         return (
+                           <span key={r.uid} className="bg-amber-500/10 text-amber-400 text-xs px-2 py-1 rounded-md border border-amber-500/20 inline-flex items-center gap-1">
+                              {name} {u?.isSubscriber && '⭐'} (Pole)
+                              {isGuest && currentUser.role === 'admin' && (
+                                <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.removeGuestFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400"><X size={12} strokeWidth={3} /></button>
+                              )}
+                           </span>
+                         )
                       })}
-                      {reserveGoaliesP2.map(r => {
-                         const name = allUsers.find(u => u.uid === r.uid)?.name || r.uid;
-                         return <span key={r.uid} className="bg-amber-500/10 text-amber-400 text-xs px-2 py-1 rounded-md border border-amber-500/20">{name} (Brána)</span>
+                      {(isPhase1 ? goingGoaliesP1.slice(2) : reserveGoaliesP2).map(r => {
+                         const isGuest = r.uid?.startsWith('guest_');
+                         const u = allUsers.find(u => u.uid === r.uid);
+                         const name = u?.name || (isGuest ? r.uid.split('_').slice(2).join(' ') + ' (Host)' : r.uid);
+                         return (
+                           <span key={r.uid} className="bg-amber-500/10 text-amber-400 text-xs px-2 py-1 rounded-md border border-amber-500/20 inline-flex items-center gap-1">
+                              {name} {u?.isSubscriber && '⭐'} (Brána)
+                              {isGuest && currentUser.role === 'admin' && (
+                                <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.removeGuestFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400"><X size={12} strokeWidth={3} /></button>
+                              )}
+                           </span>
+                         )
                       })}
                     </div>
                   </div>

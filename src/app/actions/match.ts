@@ -112,4 +112,70 @@ export async function respondToMatch(matchId: string, statusText: 'going_player'
   revalidatePath('/dashboard');
 }
 
-  // ... už zapsáno nahoře
+export async function addGuestToMatch(matchId: string, guestName: string, isGoalie: boolean) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'admin') throw new Error('Not authorized');
+
+  const db = await getDb();
+  const matchIndex = db.matches.findIndex(m => m.id === matchId);
+  if (matchIndex === -1) throw new Error('Match not found');
+
+  const match = db.matches[matchIndex];
+  
+  // Vytvoříme unikátní ID hosta: guest_čas_jméno (bez diakritiky/mezer pro bezpečí)
+  const safeName = guestName.replace(/[^a-zA-Z0-9ěščřžýáíéůúÚŮĚŠČŘŽÝÁÍÉ]/g, '_');
+  const guestUid = `guest_${Date.now()}_${safeName}`;
+  const statusText = isGoalie ? 'going_goalie' : 'going_player';
+
+  let responses = match.responses || [];
+
+  if (match.lockPhase === 'phase1_open') {
+      responses.push({
+        uid: guestUid,
+        status: statusText,
+        timestamp: new Date().toISOString()
+      });
+  } else {
+      const MAX_PLAYERS = 12;
+      const MAX_GOALIES = 2;
+      const currentlyPlayingPlayers = responses.filter(r => r.status === 'playing_player').length;
+      const currentlyPlayingGoalies = responses.filter(r => r.status === 'playing_goalie').length;
+
+      let finalStatus = statusText;
+      
+      if (statusText === 'going_player') {
+          finalStatus = currentlyPlayingPlayers < MAX_PLAYERS ? 'playing_player' : 'reserve_player';
+      } else if (statusText === 'going_goalie') {
+          finalStatus = currentlyPlayingGoalies < MAX_GOALIES ? 'playing_goalie' : 'reserve_goalie';
+      }
+
+      responses.push({
+        uid: guestUid,
+        status: finalStatus as any,
+        timestamp: new Date().toISOString()
+      });
+  }
+
+  match.responses = responses;
+  await saveDb(db);
+  revalidatePath('/dashboard');
+}
+
+export async function removeGuestFromMatch(matchId: string, guestUid: string) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'admin') throw new Error('Not authorized');
+
+  const db = await getDb();
+  const matchIndex = db.matches.findIndex(m => m.id === matchId);
+  if (matchIndex === -1) throw new Error('Match not found');
+
+  const match = db.matches[matchIndex];
+  const responseIndex = match.responses.findIndex(r => r.uid === guestUid);
+  
+  if (responseIndex !== -1) {
+     match.responses.splice(responseIndex, 1);
+  }
+
+  await saveDb(db);
+  revalidatePath('/dashboard');
+}
