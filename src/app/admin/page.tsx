@@ -1,7 +1,7 @@
 import { getCurrentUser } from '../actions/auth';
 import { getDb } from '@/lib/db';
 import { redirect } from 'next/navigation';
-import { AdminUsersTable, AdminNewsForm, AdminMatchesTable, AdminNewsTable, AdminTabs, AdminTemplatesBox, AdminCustomMatchForm, AdminNewTemplateForm, AdminSettingsForm, AdminFinanceBox, AdminEmails, AdminMatchesSection } from '@/components/AdminClient';
+import { AdminUsersTable, AdminNewsForm, AdminMatchesTable, AdminNewsTable, AdminTabs, AdminTemplatesBox, AdminCustomMatchForm, AdminNewTemplateForm, AdminSettingsForm, AdminFinanceBox, AdminEmails, AdminAddMatchSection, AdminHistoryMatchSection } from '@/components/AdminClient';
 import { ShieldAlert } from 'lucide-react';
 
 export default async function AdminPage() {
@@ -24,8 +24,11 @@ export default async function AdminPage() {
       </section>
 
       <AdminTabs 
-        matchesSection={
-          <AdminMatchesSection matches={db.matches} templates={db.templates} users={db.users} whatsappLink={db.settings?.whatsappLink} />
+        addMatchSection={
+          <AdminAddMatchSection templates={db.templates} whatsappLink={db.settings?.whatsappLink} />
+        }
+        historySection={
+          <AdminHistoryMatchSection matches={db.matches} users={db.users} whatsappLink={db.settings?.whatsappLink} />
         }
         usersSection={
           <section className="space-y-4">

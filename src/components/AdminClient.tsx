@@ -7,21 +7,23 @@ import { Pencil, Ban, Check, X, Shield, Star, DollarSign, Send, Trash2, Pin, Cal
 import { cn } from '@/lib/utils';
 
 export function AdminTabs({
-  matchesSection,
+  addMatchSection,
+  historySection,
   usersSection,
   newsSection,
   settingsSection,
   financeSection,
   emailsSection
 }: {
-  matchesSection: React.ReactNode;
+  addMatchSection: React.ReactNode;
+  historySection: React.ReactNode;
   usersSection: React.ReactNode;
   newsSection: React.ReactNode;
   settingsSection?: React.ReactNode;
   financeSection?: React.ReactNode;
   emailsSection?: React.ReactNode;
 }) {
-  const [activeTab, setActiveTab] = useState<'matches' | 'users' | 'news' | 'settings' | 'finance' | 'emails' | null>(null);
+  const [activeTab, setActiveTab] = useState<'add_match' | 'history' | 'users' | 'news' | 'settings' | 'finance' | 'emails' | null>(null);
 
   if (activeTab) {
     return (
@@ -34,7 +36,8 @@ export function AdminTabs({
         </button>
         
         <div>
-          {activeTab === 'matches' && <div key="matches">{matchesSection}</div>}
+          {activeTab === 'add_match' && <div key="add_match">{addMatchSection}</div>}
+          {activeTab === 'history' && <div key="history">{historySection}</div>}
           {activeTab === 'users' && <div key="users">{usersSection}</div>}
           {activeTab === 'finance' && <div key="finance">{financeSection}</div>}
           {activeTab === 'news' && <div key="news">{newsSection}</div>}
@@ -48,14 +51,25 @@ export function AdminTabs({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto animate-in fade-in scale-95 duration-500">
       <button
-        onClick={() => setActiveTab('matches')}
+        onClick={() => setActiveTab('add_match')}
+        className="flex flex-col items-center justify-center p-5 bg-zinc-900 border border-zinc-800 rounded-3xl hover:bg-zinc-800 hover:border-emerald-500/50 transition-all group shadow-sm text-center"
+      >
+        <div className="p-3 bg-emerald-500/10 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+          <CalendarPlus size={28} className="text-emerald-500" />
+        </div>
+        <h3 className="text-base font-bold text-white mb-1">Přidat zápas</h3>
+        <p className="text-zinc-500 text-xs">Nové termíny a šablony</p>
+      </button>
+
+      <button
+        onClick={() => setActiveTab('history')}
         className="flex flex-col items-center justify-center p-5 bg-zinc-900 border border-zinc-800 rounded-3xl hover:bg-zinc-800 hover:border-emerald-500/50 transition-all group shadow-sm text-center"
       >
         <div className="p-3 bg-emerald-500/10 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
           <LayoutList size={28} className="text-emerald-500" />
         </div>
-        <h3 className="text-base font-bold text-white mb-1">Správa Zápasů</h3>
-        <p className="text-zinc-500 text-xs">Vytváření šablon a zápasů.</p>
+        <h3 className="text-base font-bold text-white mb-1">Seznam a historie zápasů</h3>
+        <p className="text-zinc-500 text-xs">Úpravy, rušení a finance</p>
       </button>
 
       <button
@@ -116,55 +130,34 @@ export function AdminTabs({
   );
 }
 
-export function AdminMatchesSection({ matches, templates, users, whatsappLink }: { matches: Match[], templates: MatchTemplate[], users: User[], whatsappLink?: string }) {
-  const [activeTab, setActiveTab] = useState<'create' | 'manage'>('create');
-
+export function AdminAddMatchSection({ templates, whatsappLink }: { templates: MatchTemplate[], whatsappLink?: string }) {
   return (
     <div className="space-y-6">
-      <div className="flex p-1 bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-sm mb-6">
-        <button
-          onClick={() => setActiveTab('create')}
-          className={cn(
-            "flex-1 py-2 text-sm font-semibold rounded-lg transition-colors text-center",
-            activeTab === 'create' ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
-          )}
-        >
-          Přidat nový
-        </button>
-        <button
-          onClick={() => setActiveTab('manage')}
-          className={cn(
-            "flex-1 py-2 text-sm font-semibold rounded-lg transition-colors text-center",
-            activeTab === 'manage' ? "bg-zinc-800 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
-          )}
-        >
-          Seznam a Historie
-        </button>
+      <div className="space-y-6 animate-in fade-in duration-300">
+        <AdminTemplatesBox templates={templates} whatsappLink={whatsappLink} />
+        
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
+            <AdminCustomMatchForm whatsappLink={whatsappLink} />
+          </div>
+          <div className="flex-1">
+            <AdminNewTemplateForm />
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
 
-      {activeTab === 'create' && (
-        <div className="space-y-6 animate-in fade-in duration-300">
-          <AdminTemplatesBox templates={templates} whatsappLink={whatsappLink} />
-          
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-1">
-              <AdminCustomMatchForm whatsappLink={whatsappLink} />
-            </div>
-            <div className="flex-1">
-              <AdminNewTemplateForm />
-            </div>
-          </div>
+export function AdminHistoryMatchSection({ matches, users, whatsappLink }: { matches: Match[], users: User[], whatsappLink?: string }) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4 animate-in fade-in duration-300">
+        <div className="flex items-end justify-between">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Historie a Plánované zápasy</h3>
         </div>
-      )}
-
-      {activeTab === 'manage' && (
-        <div className="space-y-4 animate-in fade-in duration-300">
-          <div className="flex items-end justify-between">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Historie a Plánované zápasy</h3>
-          </div>
-          <AdminMatchesTable matches={matches} users={users} whatsappLink={whatsappLink} />
-        </div>
-      )}
+        <AdminMatchesTable matches={matches} users={users} whatsappLink={whatsappLink} />
+      </div>
     </div>
   );
 }
@@ -557,7 +550,7 @@ export function AdminMatchesTable({ matches, users, whatsappLink }: { matches: M
                     className={`mr-2 p-1.5 rounded-lg border ${match.status === 'cancelled' || match.status === 'closed' ? 'bg-zinc-800 border-zinc-700 text-zinc-600' : 'bg-amber-500/10 border-amber-500/30 text-amber-500 hover:bg-amber-500/20'} transition-all inline-flex`}
                     title={match.status === 'closed' ? 'Již vyhodnoceno' : 'Vyhodnotit docházku a finance'}
                   >
-                    <Check size={16} />
+                    <Banknote size={16} />
                   </button>
                   {match.status !== 'cancelled' && match.status === 'open' && (
                     <button
