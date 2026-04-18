@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     const db = await getDb();
     
     // Zjistíme jestli už email náhodou neexistuje
-    const exists = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const exists = db.users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
     
     if (exists) {
       return NextResponse.json({ error: 'Tento e-mail již je registrován. Běžte se přihlásit.' }, { status: 400 });

@@ -21,7 +21,8 @@ export const authOptions = {
         if (!credentials?.email || !credentials?.password) return null;
         
         const db = await getDb();
-        let user = db.users.find(u => u.email === credentials.email);
+        const inputEmail = credentials.email.trim().toLowerCase();
+        let user = db.users.find(u => u.email.toLowerCase() === inputEmail);
         
         if (user) {
           if (user.passwordHash) {
@@ -50,7 +51,7 @@ export const authOptions = {
       if (!user.email) return false;
       
       const db = await getDb();
-      let dbUser = db.users.find(u => u.email === user.email);
+      let dbUser = db.users.find(u => u.email.toLowerCase() === user.email.trim().toLowerCase());
       let isNew = false;
       
       if (!dbUser) {

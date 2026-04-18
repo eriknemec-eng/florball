@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const db = await getDb();
-    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const user = db.users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
 
     if (!user) {
       return NextResponse.json({ success: true, message: 'Pokud účet existuje, zaslali jsme vám e-mail na znovunastavení.' });
