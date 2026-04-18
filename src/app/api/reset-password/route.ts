@@ -23,8 +23,8 @@ export async function POST(request: Request) {
     user.passwordHash = await bcrypt.hash(password, 10);
     
     // Znič token po použití!
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+    delete user.resetPasswordToken;
+    delete user.resetPasswordExpires;
     
     await saveDb(db);
 
