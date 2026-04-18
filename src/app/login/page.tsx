@@ -1,23 +1,33 @@
 'use client';
 
 import { signIn } from 'next-auth/react';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // V této testovací fázi (bez samostatné "Registrace" obrazovky) 
-    // předpokládáme manuální tvorbu hashe, což budeme řešit dalším commitem.
-    // Prozatím tohle volá existující credentials provider
-    await signIn('credentials', { email, password, callbackUrl: '/dashboard' });
-    setLoading(false);
+    setError('');
+    
+    const res = await signIn('credentials', { email, password, redirect: false });
+    
+    if (res?.error) {
+      setError(res.error);
+      setLoading(false);
+    } else {
+      router.push('/dashboard');
+      router.refresh();
+    }
   };
 
   return (
@@ -48,6 +58,12 @@ export default function LoginPage() {
           <div className="flex-grow border-t border-zinc-700"></div>
         </div>
 
+        {error && (
+          <div className="mb-6 bg-red-500/10 border border-red-500/30 text-red-500 p-4 rounded-xl text-sm font-medium text-center">
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <input 
@@ -59,15 +75,22 @@ export default function LoginPage() {
               className="w-full bg-zinc-900 border border-zinc-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
             />
           </div>
-          <div>
+          <div className="relative">
             <input 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Heslo" 
               required
-              className="w-full bg-zinc-900 border border-zinc-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+              className="w-full bg-zinc-900 border border-zinc-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all pr-12"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-3.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
           </div>
           
           <div className="flex justify-end mt-1">
