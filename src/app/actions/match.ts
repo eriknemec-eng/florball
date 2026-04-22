@@ -73,7 +73,7 @@ export async function respondToMatch(matchId: string, statusText: 'going_player'
 
   // Rozesílání emailů o uvolněné kapacitě při odhlášení
   if (match.lockPhase === 'phase2_locked' && statusText === 'not_going') {
-      const baseUrl = 'https://fb.erikhack.com';
+      const baseUrl = 'https://pondelniflorbalek.cz';
       
       const pPlaying = responses.filter(r => r.status === 'playing_player').length;
       if (pPlaying < 12) {

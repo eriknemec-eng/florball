@@ -501,7 +501,7 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
     </div>
 
     {showWhatsAppPrompt && (() => {
-        const cancelTextBody = `🚨 Sorry lidi, musím florbal (${matchDate.toLocaleDateString('cs-CZ')}) odpískat. Uvolnilo se tím pádem MÍSTO! 🏃‍♂️ Kdo se první přihlásí v appce, hraje. 🏑\n\nHlašte se v apce: https://fb.erikhack.com`;
+        const cancelTextBody = `🚨 Sorry lidi, musím florbal (${matchDate.toLocaleDateString('cs-CZ')}) odpískat. Uvolnilo se tím pádem MÍSTO! 🏃‍♂️ Kdo se první přihlásí v appce, hraje. 🏑\n\nHlašte se v apce: https://pondelniflorbalek.cz`;
         
         const handleCopyAndGoCancel = () => {
           navigator.clipboard.writeText(cancelTextBody);

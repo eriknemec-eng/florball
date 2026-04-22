@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
     }
 
-    const baseUrl = 'https://fb.erikhack.com';
+    const baseUrl = 'https://pondelniflorbalek.cz';
 
     if (templateId === 'ping') {
         await sendEmail({

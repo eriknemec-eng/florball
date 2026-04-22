@@ -993,7 +993,7 @@ export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsa
       return '';
     }).filter(Boolean);
 
-    const baseUrl = 'https://fb.erikhack.com';
+    const baseUrl = 'https://pondelniflorbalek.cz';
     const text = `Čau pardi, visí nám tu nějaké nedoplatky v klubové kase:\n\n` + 
                  lines.join('\n') +
                  `\n\nProsím mrkněte do apky na detaily a případně rovnou naskenujte QR platbu. Díky!\n${baseUrl}/qr`;
@@ -1319,7 +1319,7 @@ export function WhatsAppShareModal({ matchInfo, whatsappLink, onClose, customTex
   if (!customTextBody && matchInfo) {
     const dateStr = new Date(matchInfo.date).toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
     const timeStr = new Date(matchInfo.date).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-    textBody = `🏑 Nový ${matchInfo.title.toLowerCase()}\n📅 ${dateStr} v ${timeStr}\n\nHlašte se v apce: https://fb.erikhack.com`;
+    textBody = `🏑 Nový ${matchInfo.title.toLowerCase()}\n📅 ${dateStr} v ${timeStr}\n\nHlašte se v apce: https://pondelniflorbalek.cz`;
   }
 
   const [copied, setCopied] = useState(false);

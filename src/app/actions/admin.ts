@@ -344,7 +344,7 @@ export async function sendMatchInvitationEmail(matchId: string) {
 
   if (targetEmails.length === 0) return;
 
-  const baseUrl = 'https://fb.erikhack.com';
+  const baseUrl = 'https://pondelniflorbalek.cz';
   const matchDate = new Date(match.date);
   const dateStr = matchDate.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
   const timeStr = matchDate.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
@@ -364,7 +364,7 @@ export async function sendDebtReminderEmail(uid?: string) {
   
   if (targetUsers.length === 0) return;
 
-  const baseUrl = 'https://fb.erikhack.com';
+  const baseUrl = 'https://pondelniflorbalek.cz';
   const qrCodeUrl = db.settings?.qrCodeUrl || '';
   const bankAcc = db.settings?.qrBankAccount || '';
 

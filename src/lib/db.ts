@@ -218,7 +218,7 @@ export async function getDb(): Promise<Database> {
                  html: `<h3>Tvoje místo je oficiálně potvrzené!</h3>
                         <p>Uzávěrka pro zápas <strong>${m.title}</strong> právě proběhla a ty ses úspěšně vlezl do sestavy.</p>
                         <p>Počítáme s tebou. Kdyby se něco stalo a ty bys nemohl(a) dodatečně dorazit, musíš se ručně odhlásit v aplikaci, aby systém mohl zalarmovat náhradníky pod čarou.</p>
-                        <br/><a href="https://fb.erikhack.com/dashboard" style="background:#10b981;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">Zobrazit zápas</a>`
+                        <br/><a href="https://pondelniflorbalek.cz/dashboard" style="background:#10b981;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">Zobrazit zápas</a>`
               }).catch(console.error));
            }
 
@@ -229,7 +229,7 @@ export async function getDb(): Promise<Database> {
                  html: `<h3>Kapacita zápasu se naplnila</h3>
                         <p>Bohužel na tebe v současné chvíli nevyšlo u zápasu <strong>${m.title}</strong> místo limitu a jsi veden(a) jako náhradník pod čarou.</p>
                         <p>Nic ale ještě není ztraceno! Jakmile se kdokoliv odhlásí na poslední chvíli, systém rozešle notifikaci s odkazem. Kdo z náhradníků na to klikne dřív, bere volné místo.</p>
-                        <br/><a href="https://fb.erikhack.com/dashboard" style="background:#f59e0b;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">Zkontrolovat stav</a>`
+                        <br/><a href="https://pondelniflorbalek.cz/dashboard" style="background:#f59e0b;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">Zkontrolovat stav</a>`
               }).catch(console.error));
            }
        }
