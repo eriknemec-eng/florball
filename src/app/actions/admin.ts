@@ -346,8 +346,8 @@ export async function sendMatchInvitationEmail(matchId: string) {
 
   const baseUrl = 'https://pondelniflorbalek.cz';
   const matchDate = new Date(match.date);
-  const dateStr = matchDate.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric' });
-  const timeStr = matchDate.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+  const dateStr = matchDate.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'numeric', timeZone: 'Europe/Prague' });
+  const timeStr = matchDate.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Prague' });
   
   await sendEmail({
      to: targetEmails,
