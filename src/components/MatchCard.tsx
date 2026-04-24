@@ -369,7 +369,7 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
                + Přidat Hosta
             </button>
             <select
-               className="text-[10px] sm:text-xs font-semibold bg-zinc-800/50 text-zinc-300 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-zinc-700 outline-none cursor-pointer"
+               className="text-[10px] sm:text-xs font-semibold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors border border-emerald-500/20 outline-none cursor-pointer appearance-none text-center"
                value=""
                onChange={(e) => {
                   if (!e.target.value) return;
@@ -381,13 +381,14 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
                   });
                }}
                disabled={isPending}
+               style={{ textAlignLast: 'center' }}
             >
-               <option value="" disabled>+ Zapsat Hráče</option>
+               <option value="" disabled className="bg-zinc-900 text-zinc-400">+ Zapsat hráče ▾</option>
                {allUsers
                  .filter(u => !match.responses.some(r => r.uid === u.uid))
                  .sort((a, b) => a.name.localeCompare(b.name))
                  .map(u => (
-                   <option key={u.uid} value={u.uid}>{u.name}</option>
+                   <option key={u.uid} value={u.uid} className="bg-zinc-900 text-emerald-400">{u.name}</option>
                ))}
             </select>
           </div>
