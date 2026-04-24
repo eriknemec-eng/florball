@@ -179,3 +179,42 @@ export async function adminRemoveUserFromMatch(matchId: string, uid: string) {
   await saveDb(db);
   revalidatePath('/dashboard');
 }
+
+export async function adminAddUserToMatch(matchId: string, uid: string, isGoalie: boolean) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== 'admin') throw new Error('Not authorized');
+
+  const db = await getDb();
+  const matchIndex = db.matches.findIndex(m => m.id === matchId);
+  if (matchIndex === -1) throw new Error('Match not found');
+
+  const match = db.matches[matchIndex];
+  let responses = match.responses || [];
+  
+  const existingIndex = responses.findIndex(r => r.uid === uid);
+  if (existingIndex !== -1) responses.splice(existingIndex, 1);
+
+  const statusText = isGoalie ? 'going_goalie' : 'going_player';
+
+  if (match.lockPhase === 'phase1_open') {
+      responses.push({ uid, status: statusText, timestamp: new Date().toISOString() });
+  } else {
+      const MAX_PLAYERS = 12;
+      const MAX_GOALIES = 2;
+      const currentlyPlayingPlayers = responses.filter(r => r.status === 'playing_player').length;
+      const currentlyPlayingGoalies = responses.filter(r => r.status === 'playing_goalie').length;
+
+      let finalStatus = statusText;
+      if (statusText === 'going_player') {
+          finalStatus = currentlyPlayingPlayers < MAX_PLAYERS ? 'playing_player' : 'reserve_player';
+      } else if (statusText === 'going_goalie') {
+          finalStatus = currentlyPlayingGoalies < MAX_GOALIES ? 'playing_goalie' : 'reserve_goalie';
+      }
+
+      responses.push({ uid, status: finalStatus as any, timestamp: new Date().toISOString() });
+  }
+
+  match.responses = responses;
+  await saveDb(db);
+  revalidatePath('/dashboard');
+}
