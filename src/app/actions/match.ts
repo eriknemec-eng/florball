@@ -161,7 +161,7 @@ export async function addGuestToMatch(matchId: string, guestName: string, isGoal
   revalidatePath('/dashboard');
 }
 
-export async function removeGuestFromMatch(matchId: string, guestUid: string) {
+export async function adminRemoveUserFromMatch(matchId: string, uid: string) {
   const user = await getCurrentUser();
   if (!user || user.role !== 'admin') throw new Error('Not authorized');
 
@@ -170,7 +170,7 @@ export async function removeGuestFromMatch(matchId: string, guestUid: string) {
   if (matchIndex === -1) throw new Error('Match not found');
 
   const match = db.matches[matchIndex];
-  const responseIndex = match.responses.findIndex(r => r.uid === guestUid);
+  const responseIndex = match.responses.findIndex(r => r.uid === uid);
   
   if (responseIndex !== -1) {
      match.responses.splice(responseIndex, 1);

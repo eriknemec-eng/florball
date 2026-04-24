@@ -353,7 +353,7 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
         )}
 
         {currentUser.role === 'admin' && matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (
-          <div className="pt-2 border-t border-zinc-800/50 mt-2 text-center">
+          <div className="pt-2 border-t border-zinc-800/50 mt-2 flex flex-col sm:flex-row gap-2 justify-center items-center">
             <button
                onClick={() => {
                  const name = window.prompt("Zadej jméno Hosta (např. Kamilův bratr):");
@@ -368,6 +368,28 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
             >
                + Přidat Hosta
             </button>
+            <select
+               className="text-[10px] sm:text-xs font-semibold bg-zinc-800/50 text-zinc-300 hover:text-white px-3 py-1.5 rounded-lg transition-colors border border-zinc-700 outline-none cursor-pointer"
+               value=""
+               onChange={(e) => {
+                  if (!e.target.value) return;
+                  const uid = e.target.value;
+                  const uName = allUsers.find(u => u.uid === uid)?.name;
+                  const isGoalie = window.confirm(`Jde ${uName} do BRÁNY?\n\n(OK = Brána, Zrušit = Pole)`);
+                  startTransition(() => {
+                     import('@/app/actions/match').then(m => m.adminAddUserToMatch(match.id, uid, isGoalie));
+                  });
+               }}
+               disabled={isPending}
+            >
+               <option value="" disabled>+ Zapsat Hráče</option>
+               {allUsers
+                 .filter(u => !match.responses.some(r => r.uid === u.uid))
+                 .sort((a, b) => a.name.localeCompare(b.name))
+                 .map(u => (
+                   <option key={u.uid} value={u.uid}>{u.name}</option>
+               ))}
+            </select>
           </div>
         )}
 
@@ -397,8 +419,8 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
                        return (
                          <span key={r.uid} className="text-xs px-2 py-1 rounded-md border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 inline-flex items-center gap-1">
                            {name} {u?.isSubscriber && '⭐'}
-                           {isGuest && currentUser.role === 'admin' && (
-                              <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.removeGuestFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400">
+                           {currentUser.role === 'admin' && matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (
+                              <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.adminRemoveUserFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400">
                                 <X size={12} strokeWidth={3} />
                               </button>
                            )}
@@ -422,8 +444,8 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
                        return (
                          <span key={r.uid} className="text-xs px-2 py-1 rounded-md border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 inline-flex items-center gap-1">
                            {name} {u?.isSubscriber && '⭐'}
-                           {isGuest && currentUser.role === 'admin' && (
-                              <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.removeGuestFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400">
+                           {currentUser.role === 'admin' && matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (
+                              <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.adminRemoveUserFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400">
                                 <X size={12} strokeWidth={3} />
                               </button>
                            )}
@@ -446,8 +468,8 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
                          return (
                            <span key={r.uid} className="bg-amber-500/10 text-amber-400 text-xs px-2 py-1 rounded-md border border-amber-500/20 inline-flex items-center gap-1">
                               {name} {u?.isSubscriber && '⭐'} (Pole)
-                              {isGuest && currentUser.role === 'admin' && (
-                                <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.removeGuestFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400"><X size={12} strokeWidth={3} /></button>
+                              {currentUser.role === 'admin' && matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (
+                                <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.adminRemoveUserFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400"><X size={12} strokeWidth={3} /></button>
                               )}
                            </span>
                          )
@@ -459,8 +481,8 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
                          return (
                            <span key={r.uid} className="bg-amber-500/10 text-amber-400 text-xs px-2 py-1 rounded-md border border-amber-500/20 inline-flex items-center gap-1">
                               {name} {u?.isSubscriber && '⭐'} (Brána)
-                              {isGuest && currentUser.role === 'admin' && (
-                                <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.removeGuestFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400"><X size={12} strokeWidth={3} /></button>
+                              {currentUser.role === 'admin' && matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (
+                                <button disabled={isPending} onClick={() => startTransition(() => { import('@/app/actions/match').then(m => m.adminRemoveUserFromMatch(match.id, r.uid)) })} className="text-red-500 ml-1 hover:text-red-400"><X size={12} strokeWidth={3} /></button>
                               )}
                            </span>
                          )

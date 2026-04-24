@@ -9,7 +9,7 @@ import { ProfileSetup } from "@/components/ProfileSetup";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Florball",
+  title: "pondelniflorbalek.cz",
   description: "Správa docházky pro florbal",
 };
 
@@ -28,7 +28,7 @@ export default async function RootLayout({
           {/* Header */}
           <header className="px-6 py-5 bg-zinc-900/90 backdrop-blur-md border-b border-zinc-800 flex justify-between items-center sticky top-0 z-20">
             <h1 className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              Floorball
+              pondelniflorbalek.cz
             </h1>
             {user && (
               <div className="flex items-center gap-4">
