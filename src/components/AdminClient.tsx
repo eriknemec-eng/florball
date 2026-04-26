@@ -150,29 +150,28 @@ export function AdminAddMatchSection({ templates, whatsappLink }: { templates: M
 }
 
 export function AdminHistoryMatchSection({ matches, users, whatsappLink }: { matches: Match[], users: User[], whatsappLink?: string }) {
-  const now = new Date().getTime();
-  // Zápas čeká na zúčtování, pokud je open a už se odehrál (jeho datum začátku už proběhlo).
-  const matchesToEvaluate = matches.filter(m => m.status === 'open' && new Date(m.date).getTime() < now);
-  const otherMatches = matches.filter(m => !(m.status === 'open' && new Date(m.date).getTime() < now));
+  // Otevřené zápasy (jak budoucí, tak ty čekající na zúčtování)
+  const openMatches = matches.filter(m => m.status === 'open');
+  // Zúčtované a zrušené zápasy
+  const historyMatches = matches.filter(m => m.status !== 'open');
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       
-      {matchesToEvaluate.length > 0 && (
-        <div className="space-y-4 p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5">
-          <div className="flex items-center gap-2">
-             <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
-             <h3 className="text-sm font-bold uppercase tracking-wider text-amber-500">Čeká na zúčtování ({matchesToEvaluate.length})</h3>
+      {openMatches.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-end justify-between">
+             <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Nezúčtované</h3>
           </div>
-          <AdminMatchesTable matches={matchesToEvaluate} users={users} whatsappLink={whatsappLink} />
+          <AdminMatchesTable matches={openMatches} users={users} whatsappLink={whatsappLink} />
         </div>
       )}
 
       <div className="space-y-4">
         <div className="flex items-end justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Plánované zápasy a Historie</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Historie (zúčtované)</h3>
         </div>
-        <AdminMatchesTable matches={otherMatches} users={users} whatsappLink={whatsappLink} />
+        <AdminMatchesTable matches={historyMatches} users={users} whatsappLink={whatsappLink} />
       </div>
 
     </div>
@@ -537,11 +536,17 @@ export function AdminMatchesTable({ matches, users, whatsappLink }: { matches: M
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
-            {currentMatches.map(match => (
-              <tr key={match.id} className="hover:bg-zinc-800/50 transition-colors">
+            {currentMatches.map(match => {
+              const needsEvaluation = match.status === 'open' && new Date(match.date).getTime() < Date.now();
+              return (
+              <tr key={match.id} className={cn("transition-colors", needsEvaluation ? "bg-amber-500/10 hover:bg-amber-500/20" : "hover:bg-zinc-800/50")}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Calendar size={14} className="text-emerald-500" />
+                    {needsEvaluation ? (
+                       <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0"></div>
+                    ) : (
+                       <Calendar size={14} className="text-emerald-500 shrink-0" />
+                    )}
                     <div>
                       <div className="font-semibold text-zinc-200">
                         {match.title ? <span className="text-emerald-500">{match.title}</span> : 'Utkání'} • {new Date(match.date).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}
@@ -599,7 +604,7 @@ export function AdminMatchesTable({ matches, users, whatsappLink }: { matches: M
                   </button>
                 </td>
               </tr>
-            ))}
+            )})}
             {currentMatches.length === 0 && (
               <tr>
                  <td colSpan={2} className="px-4 py-6 text-center text-zinc-500">Zatím žádné vypsané zápasy.</td>
