@@ -462,10 +462,10 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
 
         {/* Tlačítko rozbalení seznamu hráčů */}
         <div className="pt-2 border-t border-zinc-800/50 mt-2">
-           <div className="flex items-center justify-between gap-2">
+           <div className="flex items-center justify-center gap-6">
              <button 
                onClick={() => setShowPlayers(!showPlayers)}
-               className="flex-1 py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-300 flex items-center justify-center gap-1 transition-colors"
+               className="py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-300 flex items-center justify-center gap-1 transition-colors"
              >
                {showPlayers ? 'Skrýt sestavu' : 'Zobrazit sestavu'}
                {showPlayers ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -477,7 +477,7 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
                  className="text-[10px] sm:text-xs font-semibold bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-[#25D366]/20 transition-all flex-shrink-0"
                >
                  <Share2 size={12} />
-                 {rosterCopied ? 'Zkopírováno' : 'Na WhatsApp'}
+                 {rosterCopied ? 'Zkopírováno' : 'Odeslat na WhatsApp'}
                </button>
              )}
            </div>
