@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition, useState } from 'react';
+import { useTransition, useState, useEffect } from 'react';
 import { User, MatchResponse } from '@/lib/db';
 import { respondToMatch } from '@/app/actions/match';
 import { Clock, Check, X, HelpCircle, AlertCircle, ChevronDown, ChevronUp, MessageCircle, Share2 } from 'lucide-react';
@@ -26,6 +26,13 @@ interface MatchCardProps {
 export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, matchState = 'upcoming' }: MatchCardProps) {
   const [isPending, startTransition] = useTransition();
   const [showPlayers, setShowPlayers] = useState(false);
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+    const interval = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const [showWhatsAppPrompt, setShowWhatsAppPrompt] = useState(false);
   const [cancelCopied, setCancelCopied] = useState(false);
@@ -85,12 +92,14 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
   const isFullPlayersP2 = playingPlayersP2.length >= 12;
   const isFullGoaliesP2 = playingGoaliesP2.length >= 2;
 
-  // Vyhodnocení toho, jestli se mi tlacitka vubec daji mackat
-  const canClickPlayer = matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (isPhase1 || (!isFullPlayersP2 || myStatus === 'playing_player'));
-  const canClickGoalie = matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (isPhase1 || (!isFullGoaliesP2 || myStatus === 'playing_goalie'));
-
   const matchDate = new Date(match.date);
   const deadlineDate = new Date(match.deadline);
+  const isPastDeadline = now ? now.getTime() >= deadlineDate.getTime() : false;
+  const visuallyEvaluating = isPhase1 && isPastDeadline;
+
+  // Vyhodnocení toho, jestli se mi tlacitka vubec daji mackat
+  const canClickPlayer = !visuallyEvaluating && matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (isPhase1 || (!isFullPlayersP2 || myStatus === 'playing_player'));
+  const canClickGoalie = !visuallyEvaluating && matchState === 'upcoming' && !isCancelledAdmin && !isClosedAdmin && (isPhase1 || (!isFullGoaliesP2 || myStatus === 'playing_goalie'));
   
   return (
     <>
@@ -128,6 +137,15 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
            <span className="bg-amber-500 text-zinc-950 text-[10px] sm:text-xs font-bold px-3 py-1.5 rounded-full border border-amber-400 whitespace-nowrap text-right flex-shrink-0 animate-pulse">
              PRÁVĚ PROBÍHÁ 🟢
            </span>
+        ) : visuallyEvaluating ? (
+          <div className="text-right flex-shrink-0">
+             <span className="bg-amber-500/10 text-amber-500 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-500/20 whitespace-nowrap mb-1 inline-block animate-pulse">
+               ⏳ Vyhodnocuji...
+             </span>
+             <p className="text-[10px] text-zinc-500 mt-1">
+               Prosím vyčkejte na rozřazení sestavy.
+             </p>
+          </div>
         ) : isPhase1 ? (
           <div className="text-right flex-shrink-0">
              <span className="bg-emerald-500/10 text-emerald-500 text-[10px] sm:text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-500/20 whitespace-nowrap mb-1 inline-block">

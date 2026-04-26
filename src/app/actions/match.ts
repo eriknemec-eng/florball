@@ -19,6 +19,10 @@ export async function respondToMatch(matchId: string, statusText: 'going_player'
     throw new Error('Match is explicitly closed');
   }
 
+  if (match.lockPhase === 'phase1_open' && new Date(match.deadline).getTime() <= Date.now()) {
+    throw new Error('Příliš pozdě! Uzávěrka právě proběhla. Počkej prosím minutu, než systém zpracuje výsledky, a zkus to znovu.');
+  }
+
   let responses = match.responses || [];
   const existingIndex = responses.findIndex(r => r.uid === user.uid);
 
