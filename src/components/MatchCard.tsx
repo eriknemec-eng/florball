@@ -36,6 +36,54 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
 
   const [showWhatsAppPrompt, setShowWhatsAppPrompt] = useState(false);
   const [cancelCopied, setCancelCopied] = useState(false);
+  const [rosterCopied, setRosterCopied] = useState(false);
+
+  const generateRosterText = () => {
+    const playersList = (isPhase1 ? goingPlayersP1.slice(0, 12) : playingPlayersP2).map((r, i) => {
+      const isGuest = r.uid?.startsWith('guest_');
+      const u = allUsers.find(u => u.uid === r.uid);
+      const name = u?.name || (isGuest ? r.uid.split('_').slice(2).join(' ') + ' (Host)' : r.uid);
+      return `${i + 1}. ${name}`;
+    }).join('\n') || 'Zatím nikdo.';
+
+    const goaliesList = (isPhase1 ? goingGoaliesP1.slice(0, 2) : playingGoaliesP2).map((r, i) => {
+      const isGuest = r.uid?.startsWith('guest_');
+      const u = allUsers.find(u => u.uid === r.uid);
+      const name = u?.name || (isGuest ? r.uid.split('_').slice(2).join(' ') + ' (Host)' : r.uid);
+      return `${i + 1}. ${name}`;
+    }).join('\n') || 'Zatím nikdo.';
+
+    const reservePlayers = isPhase1 ? goingPlayersP1.slice(12) : reservePlayersP2;
+    const reserveGoalies = isPhase1 ? goingGoaliesP1.slice(2) : reserveGoaliesP2;
+
+    let reserveText = '';
+    if (reservePlayers.length > 0 || reserveGoalies.length > 0) {
+      reserveText = '\n\n🟡 Pod čarou:\n' + [...reservePlayers, ...reserveGoalies].map((r, i) => {
+        const isGuest = r.uid?.startsWith('guest_');
+        const u = allUsers.find(u => u.uid === r.uid);
+        const name = u?.name || (isGuest ? r.uid.split('_').slice(2).join(' ') + ' (Host)' : r.uid);
+        const pos = r.status.includes('goalie') ? ' (G)' : '';
+        return `${i + 1}. ${name}${pos}`;
+      }).join('\n');
+    }
+
+    return `🏑 Sestava pro zápas ${new Date(match.date).toLocaleDateString('cs-CZ')}\n\n🟢 Hráči v poli:\n${playersList}\n\n🥅 Gólmani:\n${goaliesList}${reserveText}`;
+  };
+
+  const handleShareRoster = () => {
+    const text = generateRosterText();
+    navigator.clipboard.writeText(text);
+    setRosterCopied(true);
+    setTimeout(() => setRosterCopied(false), 2000);
+    
+    let url = '';
+    if (whatsappLink && whatsappLink.length > 5) {
+      url = whatsappLink;
+    } else {
+      url = `whatsapp://send?text=${encodeURIComponent(text)}`;
+    }
+    window.open(url, '_blank');
+  };
 
   const handleRespond = (status: 'going_player' | 'going_goalie' | 'not_going' | 'maybe') => {
     const wasHoldingSpot = myStatus && (myStatus.startsWith('going') || myStatus.startsWith('playing') || myStatus.startsWith('reserve'));
@@ -414,13 +462,25 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
 
         {/* Tlačítko rozbalení seznamu hráčů */}
         <div className="pt-2 border-t border-zinc-800/50 mt-2">
-           <button 
-             onClick={() => setShowPlayers(!showPlayers)}
-             className="w-full py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-300 flex items-center justify-center gap-1 transition-colors"
-           >
-             {showPlayers ? 'Skrýt sestavu' : 'Zobrazit sestavu'}
-             {showPlayers ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-           </button>
+           <div className="flex items-center justify-between gap-2">
+             <button 
+               onClick={() => setShowPlayers(!showPlayers)}
+               className="flex-1 py-2 text-xs font-semibold text-zinc-500 hover:text-zinc-300 flex items-center justify-center gap-1 transition-colors"
+             >
+               {showPlayers ? 'Skrýt sestavu' : 'Zobrazit sestavu'}
+               {showPlayers ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+             </button>
+             
+             {currentUser.role === 'admin' && !isPhase1 && (
+               <button 
+                 onClick={handleShareRoster}
+                 className="text-[10px] sm:text-xs font-semibold bg-[#25D366]/10 text-[#25D366] border border-[#25D366]/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-[#25D366]/20 transition-all flex-shrink-0"
+               >
+                 <Share2 size={12} />
+                 {rosterCopied ? 'Zkopírováno' : 'Na WhatsApp'}
+               </button>
+             )}
+           </div>
            
            {showPlayers && (
              <div className="mt-3 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200 bg-zinc-950/50 rounded-2xl p-4 border border-zinc-800/50">
