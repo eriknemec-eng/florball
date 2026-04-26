@@ -56,7 +56,7 @@ export default async function AdminPage() {
         }
         financeSection={
           <section className="space-y-4">
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Finance & Dlužníci</h3>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Pokladna & Dlužníci</h3>
             <AdminFinanceBox users={db.users} whatsappLink={db.settings?.whatsappLink} />
           </section>
         }

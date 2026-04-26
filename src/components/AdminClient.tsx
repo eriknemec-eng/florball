@@ -68,8 +68,8 @@ export function AdminTabs({
         <div className="p-3 bg-emerald-500/10 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
           <LayoutList size={28} className="text-emerald-500" />
         </div>
-        <h3 className="text-base font-bold text-white mb-1">Seznam a historie zápasů</h3>
-        <p className="text-zinc-500 text-xs">Úpravy, rušení a finance</p>
+        <h3 className="text-base font-bold text-white mb-1">Zápasy a Zúčtování</h3>
+        <p className="text-zinc-500 text-xs">Úpravy, rušení a vyhodnocení docházky.</p>
       </button>
 
       <button
@@ -90,8 +90,8 @@ export function AdminTabs({
         <div className="p-3 bg-amber-500/10 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
           <Banknote size={28} className="text-amber-500" />
         </div>
-        <h3 className="text-base font-bold text-white mb-1">Finance & Dlužníci</h3>
-        <p className="text-zinc-500 text-xs">Řešení dluhů z neúčastí.</p>
+        <h3 className="text-base font-bold text-white mb-1">Pokladna & Dlužníci</h3>
+        <p className="text-zinc-500 text-xs">Stav účtů, předplatná a dluhy.</p>
       </button>
 
       <button
@@ -1205,7 +1205,7 @@ function AdminDebtUrovnatForm({ uid, currentDebt }: { uid: string, currentDebt: 
 export function EvaluateMatchModal({ match, users, onClose }: { match: Match, users: User[], onClose: () => void }) {
   const [isPending, startTransition] = useTransition();
   const [hideSubscribers, setHideSubscribers] = useState(false);
-  const [checkedPaidUids, setCheckedPaidUids] = useState<string[]>([]);
+  const [checkedPaidUids, setCheckedPaidUids] = useState<string[]>(match.attendanceDraft || []);
 
   // Stejná logika jako v MatchCard pro případ, že zápas nebyl formálně uzamčen přes Fázi 2
   const sortStrategy = (a: any, b: any) => {
@@ -1234,15 +1234,24 @@ export function EvaluateMatchModal({ match, users, onClose }: { match: Match, us
     setCheckedPaidUids(prev => prev.includes(uid) ? prev.filter(id => id !== uid) : [...prev, uid]);
   };
 
+  const saveDraft = () => {
+    startTransition(() => {
+      import('@/app/actions/admin').then(m => m.saveMatchAttendanceDraft(match.id, checkedPaidUids)).then(() => {
+        alert('Koncept byl úspěšně uložen.');
+        onClose();
+      });
+    });
+  };
+
   const submitEvaluation = () => {
     // We check all respondents that belong to the confirmed cut (even if hidden from UI, they shouldn't suddenly become debtors if they are subscribers)
     // Actually, subscribers are protected anyway, but let's evaluate them safely.
     const fullRespondentsList = [...goalies, ...players];
     const uidsWithDebt = fullRespondentsList.map(r => r.uid).filter(uid => !checkedPaidUids.includes(uid) && !uid?.startsWith('guest_'));
     
-    if (window.confirm('Všem NEZAŠKRTNUTÝM hráčům (bez předplatného) se připíše nový dluh k úhradě. Souhlasí to?')) {
+    if (window.confirm('Všem NEZAŠKRTNUTÝM hráčům (bez předplatného) se připíše nový dluh k úhradě. Souhlasí to? Tato akce zápas definitivně uzavře.')) {
       startTransition(() => {
-        evaluateMatchAttendance(match.id, uidsWithDebt).then(() => {
+        import('@/app/actions/admin').then(m => m.evaluateMatchAttendance(match.id, uidsWithDebt)).then(() => {
            onClose();
         });
       });
@@ -1300,13 +1309,20 @@ export function EvaluateMatchModal({ match, users, onClose }: { match: Match, us
             })}
           </div>
         </div>
-        <div className="p-5 border-t border-zinc-800 bg-zinc-950/30 rounded-b-3xl">
+        <div className="p-5 border-t border-zinc-800 bg-zinc-950/30 rounded-b-3xl flex flex-col sm:flex-row gap-3">
+          <button 
+            disabled={isPending}
+            onClick={saveDraft}
+            className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2"
+          >
+            {isPending ? 'Ukládám...' : 'Uložit koncept'}
+          </button>
           <button 
             disabled={isPending}
             onClick={submitEvaluation}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg transition-colors flex justify-center items-center gap-2"
+            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg transition-colors flex justify-center items-center gap-2"
           >
-            {isPending ? 'Ukládám a počítám...' : 'Uzavřít a nahrát dluhy'}
+            Definitivně zaúčtovat
           </button>
         </div>
       </div>

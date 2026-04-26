@@ -44,6 +44,7 @@ export interface Match {
   capacity: number;
   durationMinutes?: number;
   responses: MatchResponse[];
+  attendanceDraft?: string[];
 }
 
 export interface News {

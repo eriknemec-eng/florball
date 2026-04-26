@@ -324,11 +324,23 @@ export async function evaluateMatchAttendance(matchId: string, attendedUserIds: 
   const match = db.matches.find(m => m.id === matchId);
   if (match) {
      match.status = 'closed';
+     delete match.attendanceDraft;
   }
   
   await saveDb(db);
   revalidatePath('/admin');
   revalidatePath('/dashboard');
+}
+
+export async function saveMatchAttendanceDraft(matchId: string, checkedPaidUids: string[]) {
+  await checkAdmin();
+  const db = await getDb();
+  const match = db.matches.find(m => m.id === matchId);
+  if (match) {
+    match.attendanceDraft = checkedPaidUids;
+    await saveDb(db);
+    revalidatePath('/admin');
+  }
 }
 
 export async function sendMatchInvitationEmail(matchId: string) {
