@@ -150,14 +150,31 @@ export function AdminAddMatchSection({ templates, whatsappLink }: { templates: M
 }
 
 export function AdminHistoryMatchSection({ matches, users, whatsappLink }: { matches: Match[], users: User[], whatsappLink?: string }) {
+  const now = new Date().getTime();
+  // Zápas čeká na zúčtování, pokud je open a už se odehrál (jeho datum začátku už proběhlo).
+  const matchesToEvaluate = matches.filter(m => m.status === 'open' && new Date(m.date).getTime() < now);
+  const otherMatches = matches.filter(m => !(m.status === 'open' && new Date(m.date).getTime() < now));
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-4 animate-in fade-in duration-300">
-        <div className="flex items-end justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Historie a Plánované zápasy</h3>
+    <div className="space-y-8 animate-in fade-in duration-300">
+      
+      {matchesToEvaluate.length > 0 && (
+        <div className="space-y-4 p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5">
+          <div className="flex items-center gap-2">
+             <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+             <h3 className="text-sm font-bold uppercase tracking-wider text-amber-500">Čeká na zúčtování ({matchesToEvaluate.length})</h3>
+          </div>
+          <AdminMatchesTable matches={matchesToEvaluate} users={users} whatsappLink={whatsappLink} />
         </div>
-        <AdminMatchesTable matches={matches} users={users} whatsappLink={whatsappLink} />
+      )}
+
+      <div className="space-y-4">
+        <div className="flex items-end justify-between">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Plánované zápasy a Historie</h3>
+        </div>
+        <AdminMatchesTable matches={otherMatches} users={users} whatsappLink={whatsappLink} />
       </div>
+
     </div>
   );
 }
