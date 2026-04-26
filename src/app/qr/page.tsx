@@ -47,6 +47,7 @@ export default async function QRPage() {
 
           <div className="bg-white p-4 rounded-xl border-4 border-zinc-200 w-64 h-64 flex flex-col items-center justify-center text-zinc-400 gap-2 shadow-inner overflow-hidden">
             {settings.qrCodeUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={settings.qrCodeUrl} alt="QR platba" className="w-full h-full object-contain" />
             ) : (
               <>
@@ -62,7 +63,7 @@ export default async function QRPage() {
               {settings.qrBankAccount || '123456789/0000'}
             </div>
             <div className="text-xs text-zinc-500 mt-3 pt-3 border-t border-zinc-800/50 flex flex-col gap-1">
-              <span>Nezapomeň k převodu jako "Zprávu pro příjemce" vždy uvést své jméno:</span>
+              <span>Nezapomeň k převodu jako &quot;Zprávu pro příjemce&quot; vždy uvést své jméno:</span>
               <strong className="text-white text-sm">{user.name}</strong>
             </div>
           </div>

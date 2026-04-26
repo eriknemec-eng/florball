@@ -42,8 +42,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true, message: 'Ping odeslán' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Test Email Error:", error);
-    return NextResponse.json({ error: error.message || 'Chyba při odesílání.' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Chyba při odesílání.' }, { status: 500 });
   }
 }

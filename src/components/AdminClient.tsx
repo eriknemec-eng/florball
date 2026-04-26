@@ -221,7 +221,7 @@ export function AdminUsersTable({ users, currentUser }: { users: User[], current
                 <td className="px-4 py-3 text-center">
                   <select 
                     value={user.position || 'player'}
-                    onChange={(e) => startTransition(() => changeUserPosition(user.uid, e.target.value as any))}
+                    onChange={(e) => startTransition(() => changeUserPosition(user.uid, e.target.value as "player" | "goalie" | "versatile"))}
                     disabled={isPending}
                     className="bg-zinc-950 border border-zinc-700 text-xs text-white rounded-lg px-2 py-1.5 focus:ring-emerald-500 focus:border-emerald-500"
                   >
@@ -361,7 +361,7 @@ export function AdminNewsForm() {
   )
 }
 
-export function AdminSettingsForm({ defaultSettings }: { defaultSettings: any }) {
+export function AdminSettingsForm({ defaultSettings }: { defaultSettings?: import('@/lib/db').Database['settings'] }) {
   const [isPending, startTransition] = useTransition();
   const [qrBase64, setQrBase64] = useState(defaultSettings?.qrCodeUrl || '');
   const [showToast, setShowToast] = useState(false);
@@ -443,7 +443,8 @@ export function AdminSettingsForm({ defaultSettings }: { defaultSettings: any })
           </label>
           {qrBase64 && (
             <div className="w-12 h-12 shrink-0 bg-white p-1 rounded-xl shadow-inner">
-              <img src={qrBase64} alt="Náhled QR" className="w-full h-full object-contain" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={qrBase64} alt="QR kód náhled" className="w-full h-full object-contain" />
             </div>
           )}
         </div>
@@ -537,6 +538,7 @@ export function AdminMatchesTable({ matches, users, whatsappLink }: { matches: M
           </thead>
           <tbody className="divide-y divide-zinc-800">
             {currentMatches.map(match => {
+              // eslint-disable-next-line react-hooks/purity
               const needsEvaluation = match.status === 'open' && new Date(match.date).getTime() < Date.now();
               return (
               <tr key={match.id} className={cn("transition-colors", needsEvaluation ? "bg-amber-500/10 hover:bg-amber-500/20" : "hover:bg-zinc-800/50")}>
@@ -1230,7 +1232,7 @@ export function EvaluateMatchModal({ match, users, onClose }: { match: Match, us
   const [checkedPaidUids, setCheckedPaidUids] = useState<string[]>(match.attendanceDraft || []);
 
   // Stejná logika jako v MatchCard pro případ, že zápas nebyl formálně uzamčen přes Fázi 2
-  const sortStrategy = (a: any, b: any) => {
+  const sortStrategy = (a: { uid: string, timestamp?: string, status: string }, b: { uid: string, timestamp?: string, status: string }) => {
     const isGuestA = a.uid?.startsWith('guest_');
     const isGuestB = b.uid?.startsWith('guest_');
     const uA = users.find(u => u.uid === a.uid);
@@ -1238,7 +1240,7 @@ export function EvaluateMatchModal({ match, users, onClose }: { match: Match, us
     const subA = (uA?.isSubscriber || isGuestA) ? 1 : 0;
     const subB = (uB?.isSubscriber || isGuestB) ? 1 : 0;
     if (subA !== subB) return subB - subA; 
-    return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(); 
+    return new Date(a.timestamp || 0).getTime() - new Date(b.timestamp || 0).getTime(); 
   };
 
   const players = match.responses.filter(r => r.status === 'going_player' || r.status === 'playing_player').sort(sortStrategy).slice(0, 12);
@@ -1441,6 +1443,8 @@ export function AdminEmails({ currentUser }: { currentUser: User }) {
     { id: 'new-match', name: 'Nová událost (Zápas)', desc: 'Hromadná pozvánka, kterou lze nechat poslat okamžitě po vypsání termínu.' },
     { id: 'freed-player', name: 'Volné místo: Hráč v poli', desc: 'Hromadné avízo náhradníkům, že se nečekaně uvolnilo místo v poli.' },
     { id: 'freed-goalie', name: 'Volné místo: Gólman', desc: 'Hromadné avízo brankářům, že vypadl gólman ze sestavy.' },
+    { id: 'spot-confirmed', name: 'Potvrzení místa (Uzávěrka)', desc: 'E-mail odeslaný po uzávěrce hráčům, kteří se dostali do sestavy.' },
+    { id: 'spot-waitlist', name: 'Čekací listina (Uzávěrka)', desc: 'E-mail odeslaný po uzávěrce náhradníkům, na které nevyšlo místo.' },
     { id: 'password-reset', name: 'Zapomenuté heslo', desc: 'E-mail s unikátním jednorázovým odkazem na reset hesla.' },
     { id: 'reminder-sub', name: 'Upomínka: Jen předplatné', desc: 'E-mail odeslaný dlužícímu předplatiteli s čistým kontem zápasů.' },
     { id: 'reminder-match', name: 'Upomínka: Jen za zápasy', desc: 'E-mail odeslaný hráči co dluží na sekeře za odehrané zápasy.' },
@@ -1459,8 +1463,9 @@ export function AdminEmails({ currentUser }: { currentUser: User }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResult({ id: templateId, text: 'Zkušební šablona odeslána!', ok: true });
-    } catch (err: any) {
-      setResult({ id: templateId, text: 'Chyba: ' + err.message, ok: false });
+    } catch (err: unknown) {
+      if (err instanceof Error) setResult({ id: templateId, text: 'Chyba: ' + err.message, ok: false });
+      else setResult({ id: templateId, text: 'Neznámá chyba', ok: false });
     } finally {
       setLoading(null);
     }

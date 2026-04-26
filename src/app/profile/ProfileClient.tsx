@@ -44,7 +44,7 @@ export function ProfileClient({ user }: { user: User }) {
         router.push('/dashboard');
         router.refresh();
       }, 1500);
-    } catch (err) {
+    } catch {
       setError('Nepodařilo se uložit profil.');
     } finally {
       setLoading(false);
@@ -71,8 +71,9 @@ export function ProfileClient({ user }: { user: User }) {
       setOldPassword('');
       setNewPassword('');
       setNewPasswordConfirm('');
-    } catch (err: any) {
-      setPassError(err.message || 'Nepodařilo se změnit heslo.');
+    } catch (err: unknown) {
+      if (err instanceof Error) setPassError(err.message || 'Nepodařilo se změnit heslo.');
+      else setPassError('Nepodařilo se změnit heslo.');
     } finally {
       setPassLoading(false);
     }

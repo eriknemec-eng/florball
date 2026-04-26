@@ -50,6 +50,20 @@ export async function POST(req: Request) {
             subject: '🔥 Uvolnilo se místo v BRÁNĚ',
             html: `<h3>Šance na chytání!</h3><p>Jeden z gólmanů odpadl a uvolnilo se místo. Skoč po tom jako tygr!</p><a href="${baseUrl}/dashboard" style="background:#10b981;color:white;padding:12px 20px;text-decoration:none;border-radius:8px;display:inline-block;">Jít rychle na palubovku</a>`
         });
+    } else if (templateId === 'spot-confirmed') {
+        await sendEmail({
+            to: targetEmail,
+            subject: '✅ Potvrzení účasti: Pondělní trénink (Test)',
+            html: `<h3>Tvoje místo je oficiálně potvrzené!</h3>
+                   <p>Zámek první fáze cvaknul. Byl jsi dostatečně rychlý a nebo jsi stálý předplatitel. Tvé místo je garantováno.</p>`
+        });
+    } else if (templateId === 'spot-waitlist') {
+        await sendEmail({
+            to: targetEmail,
+            subject: '⏳ Jsi náhradník: Pondělní trénink (Test)',
+            html: `<h3>Kapacita zápasu je naplněna, jsi na čekací listině.</h3>
+                   <p>Tvá pozice momentálně nedosáhla na garantované místo. Sleduj ale e-maily – pokud se někdo odhlásí, obratem dostaneš zprávu o uvolněné kapacitě!</p>`
+        });
     } else if (templateId === 'password-reset') {
         await sendEmail({
             to: targetEmail,
@@ -84,8 +98,8 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ ok: true });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Test email error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to send email' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Failed to send email' }, { status: 500 });
   }
 }

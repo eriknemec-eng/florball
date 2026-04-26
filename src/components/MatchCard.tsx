@@ -3,7 +3,7 @@
 import { useTransition, useState, useEffect } from 'react';
 import { User, MatchResponse } from '@/lib/db';
 import { respondToMatch } from '@/app/actions/match';
-import { Clock, Check, X, HelpCircle, AlertCircle, ChevronDown, ChevronUp, MessageCircle, Share2 } from 'lucide-react';
+import { Clock, Check, X, HelpCircle, AlertCircle, ChevronDown, ChevronUp, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MatchCardProps {
@@ -112,7 +112,7 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
   const notGoing = responses.filter(r => r.status === 'not_going');
 
   // Sorted arrays for Phase 1 simulation 
-  const sortStrategy = (a: any, b: any) => {
+  const sortStrategy = (a: MatchResponse, b: MatchResponse) => {
     const isGuestA = a.uid?.startsWith('guest_');
     const isGuestB = b.uid?.startsWith('guest_');
     const uA = allUsers.find(u => u.uid === a.uid);

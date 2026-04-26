@@ -23,7 +23,7 @@ export async function respondToMatch(matchId: string, statusText: 'going_player'
     throw new Error('Příliš pozdě! Uzávěrka právě proběhla. Počkej prosím minutu, než systém zpracuje výsledky, a zkus to znovu.');
   }
 
-  let responses = match.responses || [];
+  const responses = match.responses || [];
   const existingIndex = responses.findIndex(r => r.uid === user.uid);
 
   // Zrušení odpovědi pokud klikl podruhé na to samé (toggle)
@@ -56,7 +56,7 @@ export async function respondToMatch(matchId: string, statusText: 'going_player'
              const currentlyPlayingPlayers = responses.filter(r => r.status === 'playing_player').length;
              const currentlyPlayingGoalies = responses.filter(r => r.status === 'playing_goalie').length;
 
-             let finalStatus: any = statusText;
+             let finalStatus: string = statusText;
              
              if (statusText === 'going_player') {
                  finalStatus = currentlyPlayingPlayers < MAX_PLAYERS ? 'playing_player' : 'reserve_player';
@@ -66,7 +66,7 @@ export async function respondToMatch(matchId: string, statusText: 'going_player'
 
              responses.push({
                uid: user.uid,
-               status: finalStatus,
+               status: finalStatus as import('@/lib/db').MatchResponse['status'],
                timestamp: new Date().toISOString()
              });
          }
@@ -131,7 +131,7 @@ export async function addGuestToMatch(matchId: string, guestName: string, isGoal
   const guestUid = `guest_${Date.now()}_${safeName}`;
   const statusText = isGoalie ? 'going_goalie' : 'going_player';
 
-  let responses = match.responses || [];
+  const responses = match.responses || [];
 
   if (match.lockPhase === 'phase1_open') {
       responses.push({
@@ -145,7 +145,7 @@ export async function addGuestToMatch(matchId: string, guestName: string, isGoal
       const currentlyPlayingPlayers = responses.filter(r => r.status === 'playing_player').length;
       const currentlyPlayingGoalies = responses.filter(r => r.status === 'playing_goalie').length;
 
-      let finalStatus = statusText;
+      let finalStatus: string = statusText;
       
       if (statusText === 'going_player') {
           finalStatus = currentlyPlayingPlayers < MAX_PLAYERS ? 'playing_player' : 'reserve_player';
@@ -155,7 +155,7 @@ export async function addGuestToMatch(matchId: string, guestName: string, isGoal
 
       responses.push({
         uid: guestUid,
-        status: finalStatus as any,
+        status: finalStatus as import('@/lib/db').MatchResponse['status'],
         timestamp: new Date().toISOString()
       });
   }
@@ -193,7 +193,7 @@ export async function adminAddUserToMatch(matchId: string, uid: string, isGoalie
   if (matchIndex === -1) throw new Error('Match not found');
 
   const match = db.matches[matchIndex];
-  let responses = match.responses || [];
+  const responses = match.responses || [];
   
   const existingIndex = responses.findIndex(r => r.uid === uid);
   if (existingIndex !== -1) responses.splice(existingIndex, 1);
@@ -208,14 +208,14 @@ export async function adminAddUserToMatch(matchId: string, uid: string, isGoalie
       const currentlyPlayingPlayers = responses.filter(r => r.status === 'playing_player').length;
       const currentlyPlayingGoalies = responses.filter(r => r.status === 'playing_goalie').length;
 
-      let finalStatus = statusText;
+      let finalStatus: string = statusText;
       if (statusText === 'going_player') {
           finalStatus = currentlyPlayingPlayers < MAX_PLAYERS ? 'playing_player' : 'reserve_player';
       } else if (statusText === 'going_goalie') {
           finalStatus = currentlyPlayingGoalies < MAX_GOALIES ? 'playing_goalie' : 'reserve_goalie';
       }
 
-      responses.push({ uid, status: finalStatus as any, timestamp: new Date().toISOString() });
+      responses.push({ uid, status: finalStatus as import('@/lib/db').MatchResponse['status'], timestamp: new Date().toISOString() });
   }
 
   match.responses = responses;

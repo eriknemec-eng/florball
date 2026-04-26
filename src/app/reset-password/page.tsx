@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, Loader2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
@@ -48,8 +48,8 @@ function ResetPasswordForm() {
       
       // Úspěch - hned přesměrujeme ke standardnímu přihlášení s parametrem
       router.push('/login?reset=success');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -57,6 +57,11 @@ function ResetPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-3 rounded-xl mb-4 text-sm">
+          {error}
+        </div>
+      )}
       <div>
         <label className="block text-zinc-400 text-xs uppercase tracking-wider mb-2 font-semibold">Nové Heslo</label>
         <div className="relative">

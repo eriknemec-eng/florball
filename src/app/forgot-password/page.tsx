@@ -27,8 +27,8 @@ export default function ForgotPasswordPage() {
       if (!res.ok) throw new Error(data.error || 'Něco se pokazilo');
       
       setMessage(data.message);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
     } finally {
       setLoading(false);
     }

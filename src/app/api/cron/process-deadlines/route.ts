@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     const db = await getDb();
     let needsDbSave = false;
     const nowTs = new Date().getTime();
-    const emailPromises: Promise<any>[] = [];
+    const emailPromises: Promise<unknown>[] = [];
 
     db.matches.forEach(m => {
        if (m.lockPhase === 'phase1_open' && new Date(m.deadline).getTime() < nowTs && m.status === 'open') {
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
            const goalies = m.responses.filter(r => r.status === 'going_goalie');
 
            // Sortovací klíč: 1) isSubscriber (true first), 2) timestamp (older first)
-           const sortStrategy = (a: any, b: any) => {
+           const sortStrategy = (a: import('@/lib/db').MatchResponse, b: import('@/lib/db').MatchResponse) => {
               const isGuestA = a.uid?.startsWith('guest_');
               const isGuestB = b.uid?.startsWith('guest_');
               const uA = db.users.find(u => u.uid === a.uid);
@@ -114,8 +114,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ success: true, message: 'Žádné zápasy k vyhodnocení.' });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('CRON Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }

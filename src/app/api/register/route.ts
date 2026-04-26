@@ -23,11 +23,11 @@ export async function POST(request: Request) {
     // Hash hesla
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const newUser = {
+    const newUser: import('@/lib/db').User = {
       uid: Math.random().toString(36).slice(2),
       email: email.toLowerCase(),
       name: name,
-      role: 'player' as any,
+      role: 'player',
       isSubscriber: false,
       hasPaid: false,
       position: position || 'player',

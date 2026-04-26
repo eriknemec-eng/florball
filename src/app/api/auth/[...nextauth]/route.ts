@@ -22,7 +22,7 @@ export const authOptions = {
         
         const db = await getDb();
         const inputEmail = credentials.email.trim().toLowerCase();
-        let user = db.users.find(u => u.email.toLowerCase() === inputEmail);
+        const user = db.users.find(u => u.email.toLowerCase() === inputEmail);
         
         if (user) {
           if (user.passwordHash) {
@@ -47,11 +47,11 @@ export const authOptions = {
     })
   ],
   callbacks: {
-    async signIn({ user, account, profile }: any) {
+    async signIn({ user }: { user: { id?: string | null; name?: string | null; email?: string | null } }) {
       if (!user.email) return false;
       
       const db = await getDb();
-      let dbUser = db.users.find(u => u.email.toLowerCase() === user.email.trim().toLowerCase());
+      let dbUser = db.users.find(u => u.email.toLowerCase() === user.email!.trim().toLowerCase());
       let isNew = false;
       
       if (!dbUser) {
@@ -80,6 +80,7 @@ export const authOptions = {
       
       return true;
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: any) {
       if (session.user) {
         session.user.id = token.sub;

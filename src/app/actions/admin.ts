@@ -310,7 +310,7 @@ export async function evaluateMatchAttendance(matchId: string, attendedUserIds: 
   const db = await getDb();
   
   const matchFee = db.settings?.matchFee || 50;
-  let modified = false;
+  const modified = false;
   
   // Nalezneme vsechny uzivatele, kteri jsou v seznamu a nemaji predplatne
   attendedUserIds.forEach(uid => {
@@ -372,7 +372,7 @@ export async function sendDebtReminderEmail(uid?: string) {
   await checkAdmin();
   const db = await getDb();
   
-  let targetUsers = uid ? [db.users.find(u => u.uid === uid)].filter(Boolean) : db.users.filter(u => (u.isSubscriber && !u.hasPaid) || ((u.debt || 0) > 0));
+  const targetUsers = uid ? [db.users.find(u => u.uid === uid)].filter(Boolean) : db.users.filter(u => (u.isSubscriber && !u.hasPaid) || ((u.debt || 0) > 0));
   
   if (targetUsers.length === 0) return;
 
@@ -380,7 +380,7 @@ export async function sendDebtReminderEmail(uid?: string) {
   const qrCodeUrl = db.settings?.qrCodeUrl || '';
   const bankAcc = db.settings?.qrBankAccount || '';
 
-  for (const u of targetUsers as any[]) {
+  for (const u of targetUsers as import('@/lib/db').User[]) {
     if (!u.email) continue;
     let debtText = '';
     const isSeasonOwed = u.isSubscriber && !u.hasPaid;

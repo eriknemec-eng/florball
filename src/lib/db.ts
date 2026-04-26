@@ -1,6 +1,5 @@
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { firestore } from './firebase';
-import { sendEmail } from './mailer';
 
 export type Role = 'admin' | 'player';
 
@@ -133,7 +132,7 @@ export async function getDb(): Promise<Database> {
          needsSave = true;
       }
 
-      m.responses.forEach((r: any) => {
+      m.responses.forEach((r: { status: string }) => {
         if (r.status === 'going') {
            // Default fallback is player if old data
            r.status = 'going_player';
@@ -150,7 +149,7 @@ export async function getDb(): Promise<Database> {
     }
 
     return parsed;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Firestore getDb Error:", error);
     return DEFAULT_DB;
   }

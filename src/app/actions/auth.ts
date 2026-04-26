@@ -7,11 +7,11 @@ import { redirect } from 'next/navigation';
 import bcrypt from 'bcryptjs';
 
 export async function getCurrentUser() {
-  const session = await getServerSession(authOptions) as any;
+  const session = await getServerSession(authOptions);
   if (!session || !session.user || !session.user.email) return null;
   
   const db = await getDb();
-  return db.users.find((u: any) => u.email === session.user.email) || null;
+  return db.users.find((u: { email: string }) => u.email === session.user.email) || null;
 }
 
 export async function updateUserProfile(name: string, position: 'player' | 'goalie' | 'versatile', emailNotifications?: boolean) {

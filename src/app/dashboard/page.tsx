@@ -11,6 +11,7 @@ export default async function DashboardPage() {
 
   const db = await getDb();
   
+  // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
   const rawMatches = db.matches.map(m => {
     const isLocked = m.lockPhase === 'phase2_locked' || m.status === 'closed';
