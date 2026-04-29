@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from 'next/link';
-import { Home, Settings, LogOut, QrCode, UserRound } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { getCurrentUser, logout } from "./actions/auth";
 import { ProfileSetup } from "@/components/ProfileSetup";
+import { DesktopNav, MobileNav } from "@/components/Navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,22 +34,7 @@ export default async function RootLayout({
             {user && (
               <div className="flex items-center gap-4">
                 {/* Desktop Menu - Hidden on mobile */}
-                <nav className="hidden md:flex items-center gap-6 mr-6">
-                  <Link href="/qr" className="flex items-center gap-2 text-red-500 hover:text-red-400 transition-colors">
-                    <QrCode size={18} />
-                    <span className="text-sm font-medium uppercase font-bold tracking-wide">QR platba</span>
-                  </Link>
-                  <Link href="/dashboard" className="flex items-center gap-2 text-zinc-400 hover:text-emerald-400 transition-colors">
-                    <Home size={18} />
-                    <span className="text-sm font-medium">Domů</span>
-                  </Link>
-                  {user.role === 'admin' && (
-                    <Link href="/admin" className="flex items-center gap-2 text-zinc-400 hover:text-cyan-400 transition-colors">
-                      <Settings size={18} />
-                      <span className="text-sm font-medium">Admin</span>
-                    </Link>
-                  )}
-                </nav>
+                <DesktopNav isAdmin={user.role === 'admin'} />
 
                 <div className="flex items-center gap-3 text-sm text-zinc-400 border-l border-zinc-700 pl-4">
                   <Link href="/profile" className="hidden sm:inline hover:text-emerald-400 transition-colors cursor-pointer" title="Nastavení profilu">
@@ -71,28 +57,7 @@ export default async function RootLayout({
           {user && !user.position && <ProfileSetup />}
 
           {/* Mobile Bottom Navigation - Hidden on desktop */}
-          {user && (
-            <nav className="md:hidden fixed bottom-0 w-full bg-zinc-900/95 backdrop-blur-md border-t border-zinc-800 px-6 py-3 flex justify-around z-20 shadow-[-0_-10px_40px_rgba(0,0,0,0.5)]">
-              <Link href="/qr" className="flex flex-col items-center gap-1 text-red-500 hover:text-red-400 transition-colors">
-                <QrCode size={24} />
-                <span className="text-[10px] font-bold uppercase tracking-wider">QR Platba</span>
-              </Link>
-              <Link href="/dashboard" className="flex flex-col items-center gap-1 text-zinc-400 hover:text-emerald-400 transition-colors">
-                <Home size={24} />
-                <span className="text-[10px] font-medium uppercase tracking-wider">Domů</span>
-              </Link>
-              <Link href="/profile" className="flex flex-col items-center gap-1 text-zinc-400 hover:text-emerald-400 transition-colors">
-                <UserRound size={24} />
-                <span className="text-[10px] font-medium uppercase tracking-wider">Profil</span>
-              </Link>
-              {user.role === 'admin' && (
-                <Link href="/admin" className="flex flex-col items-center gap-1 text-zinc-400 hover:text-cyan-400 transition-colors">
-                  <Settings size={24} />
-                  <span className="text-[10px] font-medium uppercase tracking-wider">Admin</span>
-                </Link>
-              )}
-            </nav>
-          )}
+          {user && <MobileNav isAdmin={user.role === 'admin'} />}
 
         </div>
       </body>

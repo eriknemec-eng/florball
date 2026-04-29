@@ -1,9 +1,10 @@
 import { getCurrentUser } from '@/app/actions/auth';
 import { getDb } from '@/lib/db';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { MatchCard } from '@/components/MatchCard';
 import { MobileNewsBanner } from '@/components/MobileNewsBanner';
-import { MessageCircle, Info, Pin, LayoutGrid } from 'lucide-react';
+import { MessageCircle, Info, Pin, LayoutGrid, QrCode } from 'lucide-react';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -45,17 +46,28 @@ export default async function DashboardPage() {
             <p className="text-zinc-400">Tady je tvůj přehled událostí.</p>
           </div>
           
-          {db.settings?.whatsappLink && (
-            <a 
-              href={db.settings.whatsappLink.trim()}
-              target="_blank"
-              style={{ backgroundColor: '#25D366', color: 'white' }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm hover:brightness-110"
+          <div className="flex flex-row items-center gap-2 sm:gap-3">
+            <Link 
+              href="/qr"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all bg-zinc-900 border border-zinc-800 hover:border-red-500/30 hover:bg-red-500/10 text-zinc-300 hover:text-white whitespace-nowrap"
             >
-              <MessageCircle size={16} />
-              WhatsApp Skupina
-            </a>
-          )}
+              <QrCode size={18} className="text-red-400 shrink-0" />
+              <span>Platba</span>
+              {(!user.isSubscriber && user.debt && user.debt > 0) ? (
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0 ml-0.5"></span>
+              ) : null}
+            </Link>
+            {db.settings?.whatsappLink && (
+              <a 
+                href={db.settings.whatsappLink.trim()}
+                target="_blank"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all bg-zinc-900 border border-zinc-800 hover:border-[#25D366]/30 hover:bg-[#25D366]/10 text-zinc-300 hover:text-white whitespace-nowrap"
+              >
+                <MessageCircle size={18} className="text-[#25D366] shrink-0" />
+                <span>WhatsApp</span>
+              </a>
+            )}
+          </div>
         </section>
 
         {/* Mobile News Banner (Varianta A) - Zobrazí pouze 1 nejnovější Nástěnku na mobilech + Modal */}
@@ -68,9 +80,9 @@ export default async function DashboardPage() {
               <h3 className="text-red-500 font-bold mb-1">Nová sezóna / Nezlacené příspěvky!</h3>
               <p className="text-red-500/80 text-sm">Nezapomeň prosím včas uhradit aktuální předplatné. Ještě to u tebe nemáme odškrtnuté.</p>
             </div>
-            <a href="/qr" className="shrink-0 bg-red-500 text-white font-bold py-2 px-4 rounded-xl flex items-center gap-2 hover:bg-red-600 transition-colors">
+            <Link href="/qr" className="shrink-0 bg-red-500 text-white font-bold py-2 px-4 rounded-xl flex items-center gap-2 hover:bg-red-600 transition-colors">
                Zaplatit QR ({db.settings?.seasonFee || 500} Kč)
-            </a>
+            </Link>
           </div>
         )}
 
@@ -80,9 +92,9 @@ export default async function DashboardPage() {
               <h3 className="text-amber-500 font-bold mb-1">Visí ti u nás nedoplatky za zápasy</h3>
               <p className="text-amber-500/80 text-sm">Aktuální nezaplacená částka je <strong className="text-amber-400">{user.debt} Kč</strong>. Prosím pošlí to QR kódem, případně to pořeš osobně na hřišti.</p>
             </div>
-            <a href="/qr" className="shrink-0 bg-amber-500 text-zinc-950 font-bold py-2 px-4 rounded-xl flex items-center gap-2 hover:bg-amber-400 transition-colors">
+            <Link href="/qr" className="shrink-0 bg-amber-500 text-zinc-950 font-bold py-2 px-4 rounded-xl flex items-center gap-2 hover:bg-amber-400 transition-colors">
                Zaplatit QR ({user.debt} Kč)
-            </a>
+            </Link>
           </div>
         ) : null}
 
@@ -106,9 +118,9 @@ export default async function DashboardPage() {
           </div>
           
           <div className="pt-4 flex justify-center">
-             <a href="/history" className="text-sm font-semibold text-zinc-500 hover:text-zinc-300 transition-colors bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800 px-6 py-3 rounded-full flex items-center gap-2">
+             <Link href="/history" className="text-sm font-semibold text-zinc-500 hover:text-zinc-300 transition-colors bg-zinc-900/50 hover:bg-zinc-800 border border-zinc-800 px-6 py-3 rounded-full flex items-center gap-2">
                Zobrazit historii zápasů <span className="text-lg leading-none">&rarr;</span>
-             </a>
+             </Link>
           </div>
         </section>
       </div>
