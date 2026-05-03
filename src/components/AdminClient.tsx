@@ -2,7 +2,7 @@
 
 import { useTransition, useState } from 'react';
 import { User, Match, News, MatchTemplate } from '@/lib/db';
-import { editMatch, cancelMatch, deleteUser, deleteMatch, toggleUserStatus, changeUserPosition, addNews, deleteNews, toggleNewsPin, deleteMatchTemplate, addMatchTemplate, updateSettings, toggleUserRole, resetSubscribers, resolveDebt, evaluateMatchAttendance, createMatchFromTemplate, createCustomMatch, sendMatchInvitationEmail, sendDebtReminderEmail } from '@/app/actions/admin';
+import { editMatch, cancelMatch, deleteUser, deleteMatch, toggleUserStatus, changeUserPosition, addNews, deleteNews, toggleNewsPin, deleteMatchTemplate, addMatchTemplate, updateSettings, toggleUserRole, resetSubscribers, resolveDebt, setManualDebt, evaluateMatchAttendance, createMatchFromTemplate, createCustomMatch, sendMatchInvitationEmail, sendDebtReminderEmail } from '@/app/actions/admin';
 import { Pencil, Ban, Check, X, Shield, Star, DollarSign, Send, Trash2, Pin, Calendar, CalendarPlus, ChevronLeft, ChevronRight, LayoutList, Users, MessageSquare, Plus, Settings, Banknote, Share2, ArrowLeft, Mail, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -998,9 +998,23 @@ export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsa
   const [shareMessage, setShareMessage] = useState<{title: string, textBody: string} | null>(null);
 
   const subscribers = users.filter(u => u.isSubscriber);
-  const debtors = users.filter(u => (u.debt || 0) > 0);
+  const nonSubscribers = users.filter(u => !u.isSubscriber);
 
   const allDebtors = users.filter(u => (u.isSubscriber && !u.hasPaid) || ((u.debt || 0) > 0));
+
+  const handleEditDebt = (uid: string, currentDebt: number, userName: string) => {
+    const newValStr = window.prompt(`Zadej novou výši osobního dluhu (v Kč) pro hráče ${userName}:\nPokud chceš dluh smazat, zadej 0.`, currentDebt.toString());
+    if (newValStr !== null) {
+      const newVal = parseInt(newValStr);
+      if (!isNaN(newVal) && newVal >= 0) {
+        startTransition(() => {
+          setManualDebt(uid, newVal);
+        });
+      } else if (newValStr.trim() !== '') {
+        alert('Neplatná částka.');
+      }
+    }
+  };
 
   const openDebtsMessage = () => {
     if (allDebtors.length === 0) {
@@ -1077,34 +1091,18 @@ export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsa
           <table className="w-full text-sm text-left">
             <thead className="bg-zinc-950/50 text-zinc-500 border-b border-zinc-800 text-xs uppercase">
               <tr>
-                <th className="px-4 py-3 font-medium">Hráč</th>
-                <th className="px-4 py-3 font-medium text-center">Formulář / E-mail</th>
-                <th className="px-4 py-3 font-medium text-center">Status Platby</th>
+                <th className="px-4 py-3 font-medium">Hráč / E-mail</th>
+                <th className="px-4 py-3 font-medium text-center">Status Paušálu</th>
+                <th className="px-4 py-3 font-medium text-center">Osobní dluh</th>
+                <th className="px-4 py-3 font-medium text-center">Akce (Mail)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
               {subscribers.map(u => (
                 <tr key={u.uid} className="hover:bg-zinc-800/50 transition-colors">
-                  <td className="px-4 py-3 font-semibold text-zinc-200">{u.name}</td>
-                  <td className="px-4 py-3 text-center text-zinc-500 text-xs">{u.email}</td>
+                  <td className="px-4 py-3 font-semibold text-zinc-200">{u.name} <div className="text-xs font-normal text-zinc-500">{u.email}</div></td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex items-center justify-center gap-2">
-                      <button
-                        title="Poslat zprávu e-mailem"
-                        disabled={isPending || u.hasPaid}
-                        onClick={() => {
-                           if (window.confirm(`Opravdu chceš hráče ${u.name} upomenout mailem?`)) {
-                              startTransition(() => { 
-                                sendDebtReminderEmail(u.uid)
-                                  .then(()=>alert('Dopis odeslán.'))
-                                  .catch(err => alert('Chyba: ' + err.message));
-                              });
-                           }
-                        }}
-                        className="p-1.5 rounded-lg transition-all border border-transparent hover:border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-20"
-                      >
-                         <Mail size={16} />
-                      </button>
                       <span className={cn("font-bold text-xs uppercase ml-1 mr-1", u.hasPaid ? "text-emerald-500" : "text-red-500")}>
                         {u.hasPaid ? 'Uhrazeno' : 'Dluží Sezónu'}
                       </span>
@@ -1122,6 +1120,30 @@ export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsa
                       </button>
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className={cn("font-mono", (u.debt || 0) > 0 ? "text-red-500 font-bold" : "text-zinc-500")}>{(u.debt || 0)} Kč</span>
+                      <button disabled={isPending} onClick={() => handleEditDebt(u.uid, u.debt || 0, u.name)} className="p-1 text-zinc-500 hover:text-blue-500 transition-colors" title="Upravit osobní dluh"><Pencil size={14} /></button>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                      <button
+                        title="Poslat zprávu e-mailem"
+                        disabled={isPending || (u.hasPaid && (u.debt || 0) === 0)}
+                        onClick={() => {
+                           if (window.confirm(`Opravdu chceš hráče ${u.name} upomenout mailem?`)) {
+                              startTransition(() => { 
+                                sendDebtReminderEmail(u.uid)
+                                  .then(()=>alert('Dopis odeslán.'))
+                                  .catch(err => alert('Chyba: ' + err.message));
+                              });
+                           }
+                        }}
+                        className="p-1.5 rounded-lg transition-all border border-transparent hover:border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-20"
+                      >
+                         <Mail size={16} />
+                      </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1131,35 +1153,40 @@ export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsa
 
       <section>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Sekera za zápasy ({debtors.length})</h3>
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500">Ostatní hráči (Nepravidelní) ({nonSubscribers.length})</h3>
         </div>
         
-        {debtors.length === 0 ? (
+        {nonSubscribers.length === 0 ? (
           <div className="bg-zinc-950/50 border border-zinc-800 rounded-xl p-8 text-center text-zinc-500">
-            Nikdo nic nedluží. Všichni jednorázoví hráči jsou srovnaní.
+            V systému nejsou žádní nepravidelní hráči.
           </div>
         ) : (
           <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-x-auto shadow-xl">
             <table className="w-full text-sm text-left">
               <thead className="bg-zinc-950/50 text-zinc-500 border-b border-zinc-800 text-xs uppercase">
                 <tr>
-                  <th className="px-4 py-3 font-medium">Hostující Hráč</th>
-                  <th className="px-4 py-3 font-medium text-center">Dluh (Kč)</th>
-                  <th className="px-4 py-3 font-medium text-center">Akce</th>
+                  <th className="px-4 py-3 font-medium">Hráč / E-mail</th>
+                  <th className="px-4 py-3 font-medium text-center">Dluh za zápasy (Kč)</th>
+                  <th className="px-4 py-3 font-medium text-center">Rychlé akce</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {debtors.map(u => (
+                {nonSubscribers.map(u => (
                   <tr key={u.uid} className="hover:bg-zinc-800/50 transition-colors">
-                    <td className="px-4 py-3 font-semibold text-zinc-200">{u.name}</td>
-                    <td className="px-4 py-3 text-center font-mono font-bold text-red-500">{u.debt} Kč</td>
+                    <td className="px-4 py-3 font-semibold text-zinc-200">{u.name} <div className="text-xs font-normal text-zinc-500">{u.email}</div></td>
+                    <td className="px-4 py-3 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={cn("font-mono font-bold", (u.debt || 0) > 0 ? "text-red-500" : "text-zinc-500")}>{(u.debt || 0)} Kč</span>
+                        <button disabled={isPending} onClick={() => handleEditDebt(u.uid, u.debt || 0, u.name)} className="p-1 text-zinc-500 hover:text-blue-500 transition-colors" title="Upravit osobní dluh"><Pencil size={14} /></button>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
                         <button
                           title="Poslat zprávu e-mailem"
-                          disabled={isPending}
+                          disabled={isPending || (u.debt || 0) === 0}
                           onClick={() => {
-                             if (window.confirm(`Opravdu chceš hráče ${u.name} upomenout mailem (Sekera: ${u.debt} Kč)?`)) {
+                             if (window.confirm(`Opravdu chceš hráče ${u.name} upomenout mailem (Dluh: ${u.debt} Kč)?`)) {
                                 startTransition(() => { 
                                   sendDebtReminderEmail(u.uid)
                                     .then(()=>alert('Dopis odeslán.'))
@@ -1167,11 +1194,11 @@ export function AdminFinanceBox({ users, whatsappLink }: { users: User[], whatsa
                                 });
                              }
                           }}
-                          className="mr-2 p-1.5 rounded-lg transition-all border border-transparent hover:border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-20"
+                          className="mr-2 p-1.5 rounded-lg transition-all border border-transparent hover:border-zinc-700 bg-zinc-800 text-zinc-400 hover:text-white disabled:opacity-20 inline-flex items-center"
                         >
                            <Mail size={16} />
                         </button>
-                        <AdminDebtUrovnatForm uid={u.uid} currentDebt={u.debt || 0} />
+                        {(u.debt || 0) > 0 && <AdminDebtUrovnatForm uid={u.uid} currentDebt={u.debt || 0} />}
                       </div>
                     </td>
                   </tr>

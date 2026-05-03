@@ -53,7 +53,7 @@ export default async function DashboardPage() {
             >
               <QrCode size={18} className="text-red-400 shrink-0" />
               <span>Platba</span>
-              {(!user.isSubscriber && user.debt && user.debt > 0) ? (
+              {(user.debt && user.debt > 0) ? (
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0 ml-0.5"></span>
               ) : null}
             </Link>
@@ -86,11 +86,11 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {(!user.isSubscriber && user.debt && user.debt > 0) ? (
+        {(user.debt && user.debt > 0) ? (
           <div className="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_0_15px_rgba(245,158,11,0.15)] animate-pulse-slow">
             <div>
-              <h3 className="text-amber-500 font-bold mb-1">Visí ti u nás nedoplatky za zápasy</h3>
-              <p className="text-amber-500/80 text-sm">Aktuální nezaplacená částka je <strong className="text-amber-400">{user.debt} Kč</strong>. Prosím pošlí to QR kódem, případně to pořeš osobně na hřišti.</p>
+              <h3 className="text-amber-500 font-bold mb-1">Visí ti u nás dluh v klubové kase</h3>
+              <p className="text-amber-500/80 text-sm">Aktuální nezaplacená částka je <strong className="text-amber-400">{user.debt} Kč</strong>. Prosím pošli to QR kódem, případně to pořeš osobně na hřišti.</p>
             </div>
             <Link href="/qr" className="shrink-0 bg-amber-500 text-zinc-950 font-bold py-2 px-4 rounded-xl flex items-center gap-2 hover:bg-amber-400 transition-colors">
                Zaplatit QR ({user.debt} Kč)

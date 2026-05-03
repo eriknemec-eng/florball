@@ -305,6 +305,18 @@ export async function resolveDebt(uid: string, amount: number) {
   }
 }
 
+export async function setManualDebt(uid: string, amount: number) {
+  await checkAdmin();
+  const db = await getDb();
+  const user = db.users.find(u => u.uid === uid);
+  if (user) {
+    user.debt = amount;
+    await saveDb(db);
+    revalidatePath('/admin');
+    revalidatePath('/dashboard');
+  }
+}
+
 export async function evaluateMatchAttendance(matchId: string, attendedUserIds: string[]) {
   await checkAdmin();
   const db = await getDb();
