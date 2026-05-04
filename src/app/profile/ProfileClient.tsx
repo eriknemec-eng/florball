@@ -30,7 +30,7 @@ export function ProfileClient({ user }: { user: User }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim().length < 2) {
-      setError('Křestní jméno musí mít alespoň 2 znaky');
+      setError('Jméno musí mít alespoň 2 znaky');
       return;
     }
     setLoading(true);
@@ -109,14 +109,14 @@ export function ProfileClient({ user }: { user: User }) {
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-2">Tvé (křestní) Jméno</label>
+        <label className="block text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-2">Jméno a příjmení (nebo přezdívka)</label>
         <div className="relative">
            <input 
              type="text" 
              value={name}
              onChange={(e) => setName(e.target.value)}
              className="w-full bg-zinc-900 border border-zinc-700 text-white rounded-xl px-12 py-4 focus:ring-2 focus:ring-emerald-500 transition-all font-semibold"
-             placeholder="Např. Erik"
+             placeholder="Např. Erik Němec"
              required
            />
            <UserRound className="absolute left-4 top-4 text-zinc-500" size={20} />

@@ -1550,7 +1550,7 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
     const formData = new FormData(e.currentTarget);
     const dateLocal = formData.get('date') as string;
     const timeLocal = formData.get('time') as string;
-    const deadlineDays = formData.get('deadlineDaysBefore') as string;
+    const deadlineDateStr = formData.get('deadlineDate') as string;
     const deadlineTime = formData.get('deadlineTime') as string;
     const capacityStr = formData.get('capacity') as string;
     const durationStr = formData.get('durationMinutes') as string;
@@ -1559,11 +1559,7 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
     const dateObj = new Date(`${dateLocal}T${timeLocal}:00`);
     const matchDateIso = dateObj.toISOString();
 
-    const [dlHours, dlMinutes] = deadlineTime.split(':').map(Number);
-    const dlDateObj = new Date(dateObj.getTime());
-    dlDateObj.setDate(dlDateObj.getDate() - Number(deadlineDays));
-    dlDateObj.setHours(dlHours, dlMinutes, 0, 0);
-    const deadlineIso = dlDateObj.toISOString();
+    const deadlineIso = new Date(`${deadlineDateStr}T${deadlineTime}:00`).toISOString();
 
     startTransition(() => {
       import('@/app/actions/admin').then((m) => {
@@ -1586,12 +1582,11 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
   const initialDateStr = `${dYr}-${dMo}-${dDa}`;
   const initialTimeStr = `${pad(md.getHours())}:${pad(md.getMinutes())}`;
 
-  // calculate days between deadline and match
-  // reset hours to midnight to compare just days
-  const mdMidnight = new Date(md.getTime()); mdMidnight.setHours(0,0,0,0);
-  const dlMidnight = new Date(dld.getTime()); dlMidnight.setHours(0,0,0,0);
-  const diffTime = Math.abs(mdMidnight.getTime() - dlMidnight.getTime());
-  const initialDeadlineDaysBefore = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  // calculate exact deadline date
+  const dlYr = dld.getFullYear();
+  const dlMo = pad(dld.getMonth() + 1);
+  const dlDa = pad(dld.getDate());
+  const initialDeadlineDateStr = `${dlYr}-${dlMo}-${dlDa}`;
   const initialDeadlineTimeStr = `${pad(dld.getHours())}:${pad(dld.getMinutes())}`;
 
   return (
@@ -1633,10 +1628,9 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
            </div>
 
            <div>
-              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Uzávěrka (Dní před termínem)</label>
+              <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Uzávěrka Dne v (Čas)</label>
               <div className="flex gap-2 items-center">
-                 <input name="deadlineDaysBefore" required defaultValue={initialDeadlineDaysBefore} type="number" min="0" max="14" className="w-20 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors text-center" />
-                 <span className="text-zinc-500 text-sm">dní před v</span>
+                 <input name="deadlineDate" required defaultValue={initialDeadlineDateStr} type="date" className="w-full min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
                  <input name="deadlineTime" required defaultValue={initialDeadlineTimeStr} type="time" className="w-24 min-w-0 max-w-full appearance-none bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors" />
               </div>
            </div>

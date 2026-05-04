@@ -207,6 +207,20 @@ export async function editMatch(matchId: string, title: string, dateIso: string,
     match.capacity = Number(capacity);
     match.deadline = deadlineIso;
     match.durationMinutes = durationMinutes;
+
+    // Odemknutí zápasu, pokud admin posunul uzávěrku zpět do budoucnosti
+    const nowTs = new Date().getTime();
+    if (new Date(deadlineIso).getTime() > nowTs && match.lockPhase === 'phase2_locked') {
+       match.lockPhase = 'phase1_open';
+       // Vrátíme všechny hrající a náhradníky zpět na status 'přihlášen' (aby na ně fungoval budoucí cron)
+       match.responses = match.responses.map(r => {
+         if (r.status.startsWith('playing_') || r.status.startsWith('reserve_')) {
+           return { ...r, status: r.status.includes('goalie') ? 'going_goalie' : 'going_player' };
+         }
+         return r;
+       });
+    }
+
     await saveDb(db);
     revalidatePath('/dashboard');
     revalidatePath('/admin');

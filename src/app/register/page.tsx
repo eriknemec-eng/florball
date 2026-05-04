@@ -69,12 +69,12 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-zinc-400 text-xs uppercase tracking-wider mb-2 font-semibold">Tvé Jméno</label>
+            <label className="block text-zinc-400 text-xs uppercase tracking-wider mb-2 font-semibold">Jméno a příjmení (nebo přezdívka)</label>
             <input 
               type="text" 
               value={form.name}
               onChange={(e) => setForm({...form, name: e.target.value})}
-              placeholder="Např. Tomáš" 
+              placeholder="Např. Jakub Novák" 
               required
               className="w-full bg-zinc-900 border border-zinc-700 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             />
