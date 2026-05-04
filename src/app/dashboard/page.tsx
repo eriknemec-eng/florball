@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { MatchCard } from '@/components/MatchCard';
 import { MobileNewsBanner } from '@/components/MobileNewsBanner';
 import { MessageCircle, Info, Pin, LayoutGrid, QrCode } from 'lucide-react';
+import { getVocative } from '@/lib/name-utils';
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -42,7 +43,7 @@ export default async function DashboardPage() {
         {/* Vítejte sekce */}
         <section className="flex flex-col items-start sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-1">Ahoj, {user.name.split(' ')[0]}!</h2>
+            <h2 className="text-2xl font-bold text-white mb-1">Ahoj, {getVocative(user.name)}!</h2>
             <p className="text-zinc-400">Tady je tvůj přehled událostí.</p>
           </div>
           
