@@ -866,7 +866,11 @@ export function AdminCustomMatchForm({ whatsappLink }: { whatsappLink?: string }
             return;
           }
           
-          if (dlDate < nowTs) {
+          if (dDate < nowTs) {
+            if (!window.confirm('Pozor: Nastavuješ termín zápasu do minulosti. Je to tvůj záměr (např. pro zpětné doplnění účastí)?')) {
+              return;
+            }
+          } else if (dlDate < nowTs) {
             if (!window.confirm('Pozor: Nastavil jsi uzávěrku do minulosti. Zápas se ihned po vytvoření zamkne a nikdo se už nepřihlásí. Je to tvůj záměr?')) {
               return;
             }
@@ -1595,7 +1599,11 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
       return;
     }
     
-    if (dlDate < nowTs) {
+    if (dDate < nowTs) {
+      if (!window.confirm('Pozor: Nastavuješ termín zápasu do minulosti. Je to tvůj záměr (např. pro zpětné doplnění účastí)?')) {
+        return;
+      }
+    } else if (dlDate < nowTs) {
       if (!window.confirm('Pozor: Nastavil jsi uzávěrku do minulosti. Zápas se ihned po uložení zamkne. Je to tvůj záměr?')) {
         return;
       }

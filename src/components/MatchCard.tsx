@@ -330,87 +330,140 @@ export function MatchCard({ match, currentUser, allUsers = [], whatsappLink, mat
         })()}
 
         {/* Tlačítka */}
-        <div className="grid grid-cols-3 gap-2 pt-2">
+        {(() => {
+          const isMatchLocked = isClosedAdmin || isCancelledAdmin || matchState !== 'upcoming';
           
-          <div className="flex flex-col gap-2 h-full">
-            {/* Tlačítko HRÁČ */}
-            {(userPos === 'player' || userPos === 'versatile') && (
-              <button 
-                onClick={() => handleRespond('going_player')}
-                disabled={isPending || !canClickPlayer}
-                className={cn(
-                  "relative overflow-hidden flex-1 rounded-xl text-[10px] sm:text-xs font-semibold transition-all flex flex-col justify-center items-center gap-1 border border-transparent px-1 py-2",
-                  (myStatus === 'going_player' || myStatus === 'playing_player' || myStatus === 'reserve_player') 
-                    ? myStatus === 'reserve_player'
-                      ? "bg-amber-500/10 text-amber-500 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
-                      : "bg-emerald-500 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] shadow-emerald-500/20"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-emerald-400 border-zinc-700/50",
-                  (!canClickPlayer && myStatus !== 'going_player' && myStatus !== 'playing_player' && myStatus !== 'reserve_player') && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400"
-                )}
-              >
-                 <span className="flex items-center gap-1">
-                   {myStatus === 'reserve_player' ? <AlertCircle size={14} /> : <Check size={14} className={myStatus === 'playing_player' || myStatus === 'going_player' ? 'stroke-[3]' : ''} />}
-                   {myStatus === 'reserve_player' ? 'Pod čarou' : 'Jdu hrát'}
-                 </span>
-              </button>
-            )}
+          if (isMatchLocked) {
+             // ZAMČENÝ STAV
+             if (!myStatus) {
+                return (
+                  <div className="pt-2 opacity-50">
+                    <div className="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-xl text-xs text-zinc-500 font-semibold py-4 text-center flex items-center justify-center gap-2 cursor-not-allowed">
+                       <Clock size={16} /> Zápas uzamčen (Bez vyjádření)
+                    </div>
+                  </div>
+                );
+             } else {
+                return (
+                  <div className="pt-2 opacity-60">
+                    <div className={cn(
+                      "w-full border rounded-xl text-xs font-semibold py-4 text-center flex flex-col items-center justify-center gap-1 cursor-not-allowed",
+                      myStatus?.startsWith('going') || myStatus?.startsWith('playing') ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
+                      myStatus?.startsWith('reserve') ? "bg-amber-500/10 text-amber-500 border-amber-500/20" :
+                      myStatus === 'not_going' ? "bg-red-500/10 text-red-500 border-red-500/20" :
+                      "bg-zinc-800 text-zinc-400 border-zinc-700"
+                    )}>
+                       <span className="flex items-center gap-2">
+                         🔒 Tvá volba: 
+                         {myStatus === 'going_player' || myStatus === 'playing_player' ? 'Hraju (Pole)' : 
+                          myStatus === 'going_goalie' || myStatus === 'playing_goalie' ? 'Hraju (Brána)' : 
+                          myStatus === 'reserve_player' || myStatus === 'reserve_goalie' ? 'Pod čarou' : 
+                          myStatus === 'not_going' ? 'Nejdu' : 'Možná'}
+                       </span>
+                    </div>
+                  </div>
+                );
+             }
+          }
 
-            {/* Tlačítko GÓLMAN */}
-            {(userPos === 'goalie' || userPos === 'versatile') && (
-               <button 
-                 onClick={() => handleRespond('going_goalie')}
-                 disabled={isPending || !canClickGoalie}
-                 className={cn(
-                   "relative overflow-hidden flex-1 rounded-xl text-[10px] sm:text-xs font-semibold transition-all flex flex-col justify-center items-center gap-1 border border-transparent px-1 py-2",
-                   (myStatus === 'going_goalie' || myStatus === 'playing_goalie' || myStatus === 'reserve_goalie') 
-                     ? myStatus === 'reserve_goalie'
-                       ? "bg-amber-500/10 text-amber-500 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
-                       : "bg-emerald-500 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] shadow-emerald-500/20"
-                     : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-emerald-400 border-zinc-700/50",
-                   (!canClickGoalie && myStatus !== 'going_goalie' && myStatus !== 'playing_goalie' && myStatus !== 'reserve_goalie') && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400"
-                 )}
-               >
-                  <span className="flex items-center gap-1">
-                    {myStatus === 'reserve_goalie' ? <AlertCircle size={14} /> : <Check size={14} className={myStatus === 'playing_goalie' || myStatus === 'going_goalie' ? 'stroke-[3]' : ''} />}
-                    {myStatus === 'reserve_goalie' ? 'Pod čarou' : 'Jdu kempit (G)'}
-                  </span>
-               </button>
-            )}
-          </div>
+          // AKTIVNÍ STAV (S TLAČÍTKY)
+          return (
+            <div className="pt-2">
+              {!myStatus && (
+                <div className="text-center mb-2 animate-pulse">
+                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider bg-blue-500/10 px-3 py-1 rounded-full border border-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.2)]">👉 Čekáme na tvé vyjádření</span>
+                </div>
+              )}
+              <div className="grid grid-cols-3 gap-2">
+                
+                <div className="flex flex-col gap-2 h-full">
+                  {/* Tlačítko HRÁČ */}
+                  {(userPos === 'player' || userPos === 'versatile') && (
+                    <button 
+                      onClick={() => handleRespond('going_player')}
+                      disabled={isPending || !canClickPlayer}
+                      className={cn(
+                        "relative overflow-hidden flex-1 rounded-xl text-[10px] sm:text-xs font-semibold transition-all flex flex-col justify-center items-center gap-1 border px-1 py-2",
+                        (myStatus === 'going_player' || myStatus === 'playing_player' || myStatus === 'reserve_player') 
+                          ? myStatus === 'reserve_player'
+                            ? "bg-amber-500/10 text-amber-500 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                            : "bg-emerald-500 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] shadow-emerald-500/20 border-transparent"
+                          : !myStatus 
+                            ? "bg-emerald-500/5 text-emerald-400/80 border-emerald-500/30 hover:bg-emerald-500/20 hover:text-emerald-400 animate-pulse" 
+                            : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-emerald-400 border-zinc-700/50",
+                        (!canClickPlayer && myStatus !== 'going_player' && myStatus !== 'playing_player' && myStatus !== 'reserve_player') && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400 animate-none"
+                      )}
+                    >
+                       <span className="flex items-center gap-1">
+                         {myStatus === 'reserve_player' ? <AlertCircle size={14} /> : <Check size={14} className={myStatus === 'playing_player' || myStatus === 'going_player' ? 'stroke-[3]' : ''} />}
+                         {myStatus === 'reserve_player' ? 'Pod čarou' : 'Jdu hrát'}
+                       </span>
+                    </button>
+                  )}
 
-           {/* Možná */}
-           <button 
-            onClick={() => handleRespond('maybe')}
-            disabled={isPending || isClosedAdmin || isCancelledAdmin || matchState !== 'upcoming'}
-            className={cn(
-              "rounded-xl text-[10px] sm:text-sm font-semibold transition-all flex flex-col justify-center items-center gap-1 border border-transparent h-full min-h-[64px]",
-              myStatus === 'maybe' 
-                ? "bg-zinc-700/80 text-white border-zinc-500 shadow-inner"
-                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300 border-zinc-700/50",
-              (isClosedAdmin || isCancelledAdmin || matchState !== 'upcoming') && myStatus !== 'maybe' && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400"
-            )}
-          >
-             <HelpCircle size={18} />
-             <span>Možná</span>
-          </button>
+                  {/* Tlačítko GÓLMAN */}
+                  {(userPos === 'goalie' || userPos === 'versatile') && (
+                     <button 
+                       onClick={() => handleRespond('going_goalie')}
+                       disabled={isPending || !canClickGoalie}
+                       className={cn(
+                         "relative overflow-hidden flex-1 rounded-xl text-[10px] sm:text-xs font-semibold transition-all flex flex-col justify-center items-center gap-1 border px-1 py-2",
+                         (myStatus === 'going_goalie' || myStatus === 'playing_goalie' || myStatus === 'reserve_goalie') 
+                           ? myStatus === 'reserve_goalie'
+                             ? "bg-amber-500/10 text-amber-500 border-amber-500/50 shadow-[0_0_15px_rgba(245,158,11,0.2)]"
+                             : "bg-emerald-500 text-zinc-950 shadow-[0_0_20px_rgba(16,185,129,0.3)] shadow-emerald-500/20 border-transparent"
+                           : !myStatus 
+                             ? "bg-emerald-500/5 text-emerald-400/80 border-emerald-500/30 hover:bg-emerald-500/20 hover:text-emerald-400 animate-pulse" 
+                             : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-emerald-400 border-zinc-700/50",
+                         (!canClickGoalie && myStatus !== 'going_goalie' && myStatus !== 'playing_goalie' && myStatus !== 'reserve_goalie') && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400 animate-none"
+                       )}
+                     >
+                        <span className="flex items-center gap-1">
+                          {myStatus === 'reserve_goalie' ? <AlertCircle size={14} /> : <Check size={14} className={myStatus === 'playing_goalie' || myStatus === 'going_goalie' ? 'stroke-[3]' : ''} />}
+                          {myStatus === 'reserve_goalie' ? 'Pod čarou' : 'Jdu (G)'}
+                        </span>
+                     </button>
+                  )}
+                </div>
 
-           {/* Nejdu */}
-           <button 
-            onClick={() => handleRespond('not_going')}
-            disabled={isPending || isClosedAdmin || isCancelledAdmin || matchState !== 'upcoming'}
-            className={cn(
-              "rounded-xl text-[10px] sm:text-sm font-semibold transition-all flex flex-col justify-center items-center gap-1 border border-transparent h-full min-h-[64px]",
-              myStatus === 'not_going' 
-                ? "bg-red-500/10 text-red-500 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)] bg-opacity-20"
-                : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-red-400 border-zinc-700/50",
-              (isClosedAdmin || isCancelledAdmin || matchState !== 'upcoming') && myStatus !== 'not_going' && "opacity-50 cursor-not-allowed hover:bg-zinc-800 hover:text-zinc-400"
-            )}
-          >
-             <X size={18} className={myStatus === 'not_going' ? 'stroke-[3]' : ''} />
-             <span>Nejdu</span>
-          </button>
+                 {/* Možná */}
+                 <button 
+                  onClick={() => handleRespond('maybe')}
+                  disabled={isPending}
+                  className={cn(
+                    "rounded-xl text-[10px] sm:text-sm font-semibold transition-all flex flex-col justify-center items-center gap-1 border h-full min-h-[64px]",
+                    myStatus === 'maybe' 
+                      ? "bg-zinc-700/80 text-white border-zinc-500 shadow-inner"
+                      : !myStatus 
+                        ? "bg-zinc-800/30 text-zinc-400 border-zinc-700/50 hover:bg-zinc-700/50 hover:text-zinc-300 animate-pulse"
+                        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-zinc-300 border-zinc-700/50"
+                  )}
+                >
+                   <HelpCircle size={18} />
+                   <span>Možná</span>
+                </button>
 
-        </div>
+                 {/* Nejdu */}
+                 <button 
+                  onClick={() => handleRespond('not_going')}
+                  disabled={isPending}
+                  className={cn(
+                    "rounded-xl text-[10px] sm:text-sm font-semibold transition-all flex flex-col justify-center items-center gap-1 border h-full min-h-[64px]",
+                    myStatus === 'not_going' 
+                      ? "bg-red-500/10 text-red-500 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.2)] bg-opacity-20"
+                      : !myStatus 
+                        ? "bg-red-500/5 text-red-400/80 border-red-500/20 hover:bg-red-500/10 hover:text-red-400 animate-pulse"
+                        : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-red-400 border-zinc-700/50"
+                  )}
+                >
+                   <X size={18} className={myStatus === 'not_going' ? 'stroke-[3]' : ''} />
+                   <span>Nejdu</span>
+                </button>
+
+              </div>
+            </div>
+          );
+        })()}
         
         <div className="col-span-2 md:col-span-1 border-t border-zinc-800/50 md:border-none pt-2 md:pt-0" />
 
