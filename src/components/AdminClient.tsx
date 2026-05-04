@@ -855,6 +855,30 @@ export function AdminCustomMatchForm({ whatsappLink }: { whatsappLink?: string }
         if (title && capacity && dateL && timeL && dlDateL && dlTimeL && durationMinutes) {
           const dateIso = new Date(`${dateL}T${timeL}:00`).toISOString();
           const deadlineIso = new Date(`${dlDateL}T${dlTimeL}:00`).toISOString();
+
+          // Chytrá validace
+          const dDate = new Date(dateIso).getTime();
+          const dlDate = new Date(deadlineIso).getTime();
+          const nowTs = Date.now();
+          
+          if (dlDate >= dDate) {
+            alert('Chyba: Uzávěrka nemůže být po začátku zápasu (nebo ve stejný čas).');
+            return;
+          }
+          
+          if (dlDate < nowTs) {
+            if (!window.confirm('Pozor: Nastavil jsi uzávěrku do minulosti. Zápas se ihned po vytvoření zamkne a nikdo se už nepřihlásí. Je to tvůj záměr?')) {
+              return;
+            }
+          } else {
+            const diffHours = (dDate - dlDate) / (1000 * 60 * 60);
+            if (diffHours > 96) {
+              if (!window.confirm('Pozor: Uzávěrka je o více než 4 dny před zápasem. Obvykle bývá 1 až 3 dny. Neuklikl ses v datu? Chceš to opravdu uložit?')) {
+                return;
+              }
+            }
+          }
+
           startTransition(() => {
             createCustomMatch(dateIso, capacity, title, deadlineIso, durationMinutes).then(m => {
               setShareMatch(m);
@@ -1560,6 +1584,29 @@ export function AdminEditMatchModal({ match, onClose }: { match: Match, onClose:
     const matchDateIso = dateObj.toISOString();
 
     const deadlineIso = new Date(`${deadlineDateStr}T${deadlineTime}:00`).toISOString();
+
+    // Chytrá validace
+    const dDate = dateObj.getTime();
+    const dlDate = new Date(deadlineIso).getTime();
+    const nowTs = Date.now();
+    
+    if (dlDate >= dDate) {
+      alert('Chyba: Uzávěrka nemůže být po začátku zápasu (nebo ve stejný čas).');
+      return;
+    }
+    
+    if (dlDate < nowTs) {
+      if (!window.confirm('Pozor: Nastavil jsi uzávěrku do minulosti. Zápas se ihned po uložení zamkne. Je to tvůj záměr?')) {
+        return;
+      }
+    } else {
+      const diffHours = (dDate - dlDate) / (1000 * 60 * 60);
+      if (diffHours > 96) {
+        if (!window.confirm('Pozor: Uzávěrka je o více než 4 dny před zápasem. Obvykle bývá 1 až 3 dny. Neuklikl ses v datu? Chceš to opravdu uložit?')) {
+          return;
+        }
+      }
+    }
 
     startTransition(() => {
       import('@/app/actions/admin').then((m) => {
