@@ -102,7 +102,15 @@ const DEFAULT_DB: Database = {
 export async function getDb(): Promise<Database> {
   try {
     const docRef = doc(firestore, 'data', 'main');
-    const snapshot = await getDoc(docRef);
+    
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Firebase operation timed out')), 8000);
+    });
+
+    const snapshot = await Promise.race([
+      getDoc(docRef),
+      timeoutPromise
+    ]) as import('firebase/firestore').DocumentSnapshot;
     
     if (!snapshot.exists()) {
        await saveDb(DEFAULT_DB);
@@ -157,5 +165,13 @@ export async function getDb(): Promise<Database> {
 
 export async function saveDb(db: Database): Promise<void> {
   const docRef = doc(firestore, 'data', 'main');
-  await setDoc(docRef, db);
+  
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('Firebase operation timed out')), 8000);
+  });
+
+  await Promise.race([
+    setDoc(docRef, db),
+    timeoutPromise
+  ]);
 }
